@@ -172,6 +172,16 @@ def get_all_records(site,resource_id,API_key=None,chunk_size=5000):
 
     return all_records
 
+def get_attributes(kind):
+    from .credentials import site, ckan_api_key as API_key
+    if kind in ['spaces']:
+        from .credentials import spaces_resource_id as resource_id
+    else:
+        raise ValueError("attribute kind = {} not found".format(kind))
+
+    attribute_dicts = get_all_records(site, resource_id, API_key)
+    return attribute_dicts
+
 def get_revenue(zone,start_date,end_date,start_hour,end_hour):
     """This should look like a SQL query."""
     pass
@@ -206,10 +216,7 @@ def get_space_count(zone,start_date,end_date):
 
     # For now, just get all the data directly.
 
-    from .credentials import site, ckan_api_key as API_key, spaces_resource_id as resource_id
-
-    attribute_dicts = get_all_records(site, resource_id, API_key)
-    pprint(attribute_dicts)
+    attribute_dicts = get_attributes('spaces')
 
     def convert_string_to_date(s):
         return datetime.datetime.strptime(s, "%Y-%m-%d").date()
