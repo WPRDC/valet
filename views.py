@@ -79,11 +79,162 @@ def convert_to_choices(xs):
         choices.append( (zone_code, x) )
     return choices
 
+def get_number_of_rows(site,resource_id,API_key=None):
+# On other/later versions of CKAN it would make sense to use
+# the datastore_info API endpoint here, but that endpoint is
+# broken on WPRDC.org.
+    try:
+        ckan = ckanapi.RemoteCKAN(site, apikey=API_key)
+        results_dict = ckan.action.datastore_search(resource_id=resource_id,limit=1) # The limit
+        # must be greater than zero for this query to get the 'total' field to appear in
+        # the API response.
+        count = results_dict['total']
+    except:
+        return None
+
+    return count
+
+def get_resource_data(site,resource_id,API_key=None,count=1000,offset=0,fields=None):
+    # Use the datastore_search API endpoint to get <count> records from
+    # a CKAN resource starting at the given offset and only returning the
+    # specified fields in the given order (defaults to all fields in the
+    # default datastore order).
+    ckan = ckanapi.RemoteCKAN(site, apikey=API_key)
+    if fields is None:
+        response = ckan.action.datastore_search(id=resource_id, limit=count, offset=offset)
+    else:
+        response = ckan.action.datastore_search(id=resource_id, limit=count, offset=offset, fields=fields)
+    # A typical response is a dictionary like this
+    #{u'_links': {u'next': u'/api/action/datastore_search?offset=3',
+    #             u'start': u'/api/action/datastore_search'},
+    # u'fields': [{u'id': u'_id', u'type': u'int4'},
+    #             {u'id': u'pin', u'type': u'text'},
+    #             {u'id': u'number', u'type': u'int4'},
+    #             {u'id': u'total_amount', u'type': u'float8'}],
+    # u'limit': 3,
+    # u'records': [{u'_id': 1,
+    #               u'number': 11,
+    #               u'pin': u'0001B00010000000',
+    #               u'total_amount': 13585.47},
+    #              {u'_id': 2,
+    #               u'number': 2,
+    #               u'pin': u'0001C00058000000',
+    #               u'total_amount': 7827.64},
+    #              {u'_id': 3,
+    #               u'number': 1,
+    #               u'pin': u'0001C01661006700',
+    #               u'total_amount': 3233.59}],
+    # u'resource_id': u'd1e80180-5b2e-4dab-8ec3-be621628649e',
+    # u'total': 88232}
+    data = response['records']
+    return data
+
+def get_all_records(site,resource_id,API_key=None,chunk_size=5000):
+    all_records = []
+    failures = 0
+    k = 0
+    offset = 0 # offset is almost k*chunk_size (but not quite)
+    row_count = get_number_of_rows(site,resource_id,API_key)
+    if row_count == 0: # or if the datastore is not active
+       print("No data found in the datastore.")
+       success = False
+    while len(all_records) < row_count and failures < 5:
+        time.sleep(0.01)
+        try:
+            records = get_resource_data(site,resource_id,API_key,chunk_size,offset)
+            if records is not None:
+                all_records += records
+            failures = 0
+            offset += chunk_size
+        except:
+            failures += 1
+
+        # If the number of rows is a moving target, incorporate
+        # this step:
+        #row_count = get_number_of_rows(site,resource_id,API_key)
+        k += 1
+        print("{} iterations, {} failures, {} records, {} total records".format(k,failures,len(records),len(all_records)))
+
+        # Another option for iterating through the records of a resource would be to
+        # just iterate through using the _links results in the API response:
+        #    "_links": {
+        #  "start": "/api/action/datastore_search?limit=5&resource_id=5bbe6c55-bce6-4edb-9d04-68edeb6bf7b1",
+        #  "next": "/api/action/datastore_search?offset=5&limit=5&resource_id=5bbe6c55-bce6-4edb-9d04-68edeb6bf7b1"
+        # Like this:
+            #if r.status_code != 200:
+            #    failures += 1
+            #else:
+            #    URL = site + result["_links"]["next"]
+
+        # Information about better ways to handle requests exceptions:
+        #http://stackoverflow.com/questions/16511337/correct-way-to-try-except-using-python-requests-module/16511493#16511493
+
+    return all_records
+
 def get_revenue(zone,start_date,end_date,start_hour,end_hour):
     """This should look like a SQL query."""
     pass
 
 def get_space_count(zone,start_date,end_date):
+    """Check the cache, and if it's been refreshed today, use the cached value."""
+    # Run query on model.
+    # If there's more than zero results and the dates are valid, return the space count
+    # Otherwise, get it from the CKAN repository and save the new value.
+    #       Schema
+    #       as_of, zone, space_count, cache_date
+
+    # Actually, in most cases, the desired date will be in the past, so the cache
+    # should be fine.
+
+    # It's necessary to define a date range for which some information is valid.
+    # For instance, if we have lease counts for 2016-07-04 and 2018-02-02, all
+    # intermediate dates should map to the 2016-07-04 value (as a first cut).
+
+    # Data structure:
+    # get_space_count(zone,start_date,end_date) needs space count for each
+    # intermediate date.
+    # Maybe a function like this space_count(zone,date) could be called once
+    # for each date.
+
+    # But before going to that extreme, how about getting the value that covers
+    # the majority of the range (based on which waypoint date is closest)?
+
+    # spaces = OrderedDict(date(2016,7,4):  {"401 - Downtown 1": 210,...},
+    #           date(2018,2,2):  {"401 - Downtown 1": 271,...})
+
+
+    # For now, just get all the data directly.
+
+    from .credentials import site, ckan_api_key as API_key, spaces_resource_id as resource_id
+
+    attribute_dicts = get_all_records(site, resource_id, API_key)
+    pprint(attribute_dicts)
+
+    def convert_string_to_date(s):
+        return datetime.datetime.strptime(s, "%Y-%m-%d").date()
+
+    spaces = defaultdict(dict)
+    for a in attribute_dicts:
+        as_of = convert_string_to_date(a['as_of'])
+        spaces[as_of][a['zone']] = a['spaces']
+
+    updates = spaces.keys()
+    closest_date = None
+    min_diff = datetime.timedelta(days = 99999)
+    for u in updates:
+        diff = abs( u - start_date ) + abs( u - end_date )
+        if diff < min_diff:
+            min_diff = diff
+            closest_date = u
+
+    return spaces[closest_date][zone]
+
+
+
+    # But maybe it's best to just pull all space counts, lease counts, and hourly rates
+    # when the app is first run and keep them in some kind of persistent memcache,...
+    # except I don't think that Django has this. One probably has to run redis
+    # for this functionality.
     pass
 
 def get_lease_count(zone,start_date,end_date):
