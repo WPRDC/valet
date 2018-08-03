@@ -1,10 +1,11 @@
-import re, ckanapi
+import re, ckanapi, time, datetime
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.template import loader
 from django import forms
 
 from pprint import pprint
+from collections import defaultdict
 
 from .util import parking_days_in_range
 
@@ -255,8 +256,9 @@ def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
     return utilization
 
 def index(request):
-
-    zone_choices = convert_to_choices(get_zones())
+    all_zones = get_zones()
+    zone_choices = convert_to_choices(all_zones)
+    print(get_space_count(all_zones[0],datetime.date(2018,1,1),datetime.date(2018,3,31)))
 
     class ZoneForm(forms.Form):
         zone = forms.ChoiceField(choices=zone_choices)
