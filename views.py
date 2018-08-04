@@ -4,6 +4,8 @@ from django.http import HttpResponse
 from django.template import loader
 from django import forms
 
+from datetime import timedelta
+
 from pprint import pprint
 from collections import defaultdict
 
@@ -72,6 +74,64 @@ def get_zones():
         "426 - Hill District",
         "427 - Knoxville"]
     return zones
+
+def is_beginning_of_the_quarter(dt):
+   return dt.day == 1 and dt.month in [1,4,7,10]
+
+def add_quarter_to_date(d):
+    if d.month in [1,4,7]:
+        d = d.replace(month = d.month+3)
+    elif d.month == 10:
+        d = d.replace(month = 1, year = d.year+1)
+    else:
+        raise ValueError("The date {} does not correspond to the beginning of a quarter.".format(d))
+    return d
+
+def beginning_of_quarter(d):
+    """Takes a date and returns the first date before
+    that that corresponds to the beginning of the quarter."""
+    if d == None:
+        d = datetime.datetime.now().date()
+    return d.replace(day=1, month=int((d.month-1)/3)*3+1).date()
+
+def end_of_quarter(d):
+    #print("The approach used in end_of_quarter may not work under some circumstances. Subtracting 31+30+31 days from 7/1 gives 3/31.")
+    #return beginning_of_quarter(d + timedelta(days=31+30+31)) - timedelta(days=1)
+    start_of_quarter = beginning_of_quarter(d)
+    start_of_next_quarter = add_quarter_to_date(start_of_quarter)
+    return start_of_next_quarter - timedelta(days = 1)
+
+def date_to_quarter(d):
+    year = d.year
+    quarter_number = int((d.month-1)/3) + 1
+    return (year, quarter_number)
+
+def get_quarter_choices():
+    earliest_date = datetime.date(2016,1,1)
+    earliest_quarter = date_to_quarter(earliest_date)
+
+    now = datetime.datetime.now()
+    latest_quarter = date_to_quarter(now)
+
+    # Note that the latest_quarter may be incomplete!
+    xs = []
+    d = beginning_of_quarter(now)
+    while d >= earliest_date:
+        xs.append(date_to_quarter(d))
+        if d.month in [4,7,10]:
+            d = d.replace(month = d.month-3)
+        elif d.month == 1:
+            d = d.replace(month = 10, year = d.year-1)
+        else:
+            raise ValueError("The date {} does not correspond to the beginning of a quarter.".format(d))
+        print(d)
+
+    choices = []
+    for x in xs:
+        quarter_code = "{} Q{}".format(x[0],x[1])
+        choices.append( (quarter_code, quarter_code) )
+
+    return choices
 
 def convert_to_choices(xs):
     choices = []
@@ -265,11 +325,17 @@ def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
 def index(request):
     all_zones = get_zones()
     zone_choices = convert_to_choices(all_zones)
-    print(get_space_count(all_zones[0],datetime.date(2018,1,1),datetime.date(2018,3,31)))
+    zone_features = {'spaces': get_space_count(all_zones[0],datetime.date(2018,1,1),datetime.date(2018,3,31)),
+            } #'rate':
 
-    class ZoneForm(forms.Form):
+    quarter_choices = get_quarter_choices()
+
+    pprint(zone_choices)
+    pprint(quarter_choices)
+
+    class SpaceTimeForm(forms.Form):
         zone = forms.ChoiceField(choices=zone_choices)
-        #resource = forms.ChoiceField(choices=first_resource_choices)
+        quarter = forms.ChoiceField(choices=quarter_choices)
         #input_field = forms.ChoiceField(choices=first_field_choices, help_text="(what you have in your spreadsheet)")
         #input_column_index = forms.CharField(initial='B',
         #    label="Input column",
@@ -279,8 +345,11 @@ def index(request):
 
     #template = loader.get_template('index.html')
     #context = {#'output': output,
-    #            'zone_picker': ZoneForm().as_p()}
+    #            'zone_picker': SpaceTimeForm().as_p()}
+    context = {'zone_picker': SpaceTimeForm().as_p(),
+            'zone_features': zone_features}
+    return render(request, 'valet/index.html', context)
 
     #return HttpResponse(template.render(context, request))
-    return HttpResponse("This page shows parking reports by zone/lot. <br>Choose a zone: {}<br>".format( ZoneForm().as_p() ))
+    #return HttpResponse("This page shows parking reports by zone/lot. <br>Choose a zone: {}<br>".format( SpaceTimeForm().as_p() ))
 
