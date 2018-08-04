@@ -75,6 +75,9 @@ def get_zones():
         "427 - Knoxville"]
     return zones
 
+def convert_string_to_date(s):
+    return datetime.datetime.strptime(s, "%Y-%m-%d").date()
+
 def is_beginning_of_the_quarter(dt):
    return dt.day == 1 and dt.month in [1,4,7,10]
 
@@ -278,9 +281,6 @@ def get_space_count(zone,start_date,end_date):
 
     attribute_dicts = get_attributes('spaces')
 
-    def convert_string_to_date(s):
-        return datetime.datetime.strptime(s, "%Y-%m-%d").date()
-
     spaces = defaultdict(dict)
     for a in attribute_dicts:
         as_of = convert_string_to_date(a['as_of'])
@@ -329,9 +329,6 @@ def index(request):
             } #'rate':
 
     quarter_choices = get_quarter_choices()
-
-    pprint(zone_choices)
-    pprint(quarter_choices)
 
     class SpaceTimeForm(forms.Form):
         zone = forms.ChoiceField(choices=zone_choices)
