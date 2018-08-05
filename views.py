@@ -9,6 +9,7 @@ from datetime import timedelta
 from pprint import pprint
 from collections import defaultdict
 
+from .models import SpaceCount, LastCached
 from .util import parking_days_in_range
 
 def get_zones():
@@ -237,12 +238,45 @@ def get_all_records(site,resource_id,API_key=None,chunk_size=5000):
 
 def get_attributes(kind):
     from .credentials import site, ckan_api_key as API_key
-    if kind in ['spaces']:
+    if kind in ['spaces', 'rates']:
+        try:
+            last_cached = LastCached.objects.get(parameter = kind).cache_date
+            last_cached_date = datetime.datetime.strptime(last_cached, "%Y-%m-%d").date()
+        except LastCached.DoesNotExist as e:
+            last_cached = None
+        table_data = SpaceCount.objects.all()
         from .credentials import spaces_resource_id as resource_id
     else:
         raise ValueError("attribute kind = {} not found".format(kind))
 
-    attribute_dicts = get_all_records(site, resource_id, API_key)
+    today = datetime.datetime.now().date()
+    if len(table_data) == 0 or (last_cached is not None and (today - last_cached_date > timedelta(days=3))):
+        # Build/refresh cache
+        print("Pulling and caching data.")
+        attribute_dicts = get_all_records(site, resource_id, API_key)
+        # Cache data in the corresponding table.
+        if kind in ['spaces', 'rates']:
+            for a in attribute_dicts:
+                if a['zone'] == '424 - Technology Drive':
+                    a['rate'] = 2
+                    print("For now, just coerce this rate to $2 per hour, but eventually something smarter should be done.")
+                sc = SpaceCount(zone = a['zone'],
+                        as_of = a['as_of'],
+                        spaces = a['spaces'],
+                        rate = a['rate'])
+                sc.save()
+            if len(attribute_dicts) > 0:
+                LastCached(parameter = kind, cache_date = datetime.datetime.strftime(today, "%Y-%m-%d")).save()
+    else:
+        print("Using data pulled from local database.")
+        attribute_dicts = []
+        for row in table_data:
+            attribute_d = {'zone': row.zone,
+                    'as_of': row.as_of,
+                    'spaces': row.spaces,
+                    'rate': row.rate}
+            attribute_dicts.append(attribute_d)
+
     return attribute_dicts
 
 def get_revenue(zone,start_date,end_date,start_hour,end_hour):
@@ -282,9 +316,13 @@ def get_space_count(zone,start_date,end_date):
     attribute_dicts = get_attributes('spaces')
 
     spaces = defaultdict(dict)
+    rates = defaultdict(dict)
     for a in attribute_dicts:
         as_of = convert_string_to_date(a['as_of'])
-        spaces[as_of][a['zone']] = a['spaces']
+        if 'spaces' in a:
+            spaces[as_of][a['zone']] = a['spaces']
+        if 'rate' in a:
+            rates[as_of][a['zone']] = a['rate']
 
     updates = spaces.keys()
     closest_date = None
@@ -295,7 +333,7 @@ def get_space_count(zone,start_date,end_date):
             min_diff = diff
             closest_date = u
 
-    return spaces[closest_date][zone]
+    return spaces[closest_date][zone], rates[closest_date][zone]
 
 
 
@@ -325,8 +363,10 @@ def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
 def index(request):
     all_zones = get_zones()
     zone_choices = convert_to_choices(all_zones)
-    zone_features = {'spaces': get_space_count(all_zones[0],datetime.date(2018,1,1),datetime.date(2018,3,31)),
-            } #'rate':
+    spaces, rate = get_space_count(all_zones[0],datetime.date(2018,1,1),datetime.date(2018,3,31))
+
+    zone_features = {'spaces': spaces,
+            'rate': rate}
 
     quarter_choices = get_quarter_choices()
 
