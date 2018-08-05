@@ -13,6 +13,7 @@ class SpaceCount(models.Model):
     class Meta:
         verbose_name = "space count and rate"
         verbose_name_plural = "space counts and rates"
+        unique_together = ('zone', 'as_of') # The combination of zone and as_of serve as a primary key.
 
     def __str__(self):
         return '{} | {}'.format(self.zone,self.as_of)
