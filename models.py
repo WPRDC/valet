@@ -17,3 +17,15 @@ class SpaceCount(models.Model):
 
     def __str__(self):
         return '{} | {}'.format(self.zone,self.as_of)
+
+class LeaseCount(models.Model):
+    zone = models.CharField(max_length=100)
+    as_of = models.CharField(max_length=100) # Store date as a string for now.
+    leases = models.SmallIntegerField()
+
+    class Meta:
+        verbose_name = "lease count"
+        unique_together = ('zone', 'as_of') # The combination of zone and as_of serve as a primary key.
+
+    def __str__(self):
+        return '{} | {}'.format(self.zone,self.as_of)

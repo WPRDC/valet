@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import LastCached, SpaceCount
+from .models import LastCached, SpaceCount, LeaseCount
 
 class LastCachedAdmin(admin.ModelAdmin):
     list_display = ['parameter', 'cache_date']
@@ -18,3 +18,12 @@ class SpaceCountAdmin(admin.ModelAdmin):
     ordering = ['as_of', 'zone']
 
 admin.site.register(SpaceCount, SpaceCountAdmin)
+
+
+class LeaseCountAdmin(admin.ModelAdmin):
+    list_display = ['zone', 'as_of', 'leases']
+
+    search_fields = list_display
+    ordering = ['as_of', 'zone']
+
+admin.site.register(LeaseCount, LeaseCountAdmin)

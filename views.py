@@ -9,7 +9,7 @@ from datetime import timedelta
 from pprint import pprint
 from collections import defaultdict
 
-from .models import SpaceCount, LastCached
+from .models import SpaceCount, LeaseCount, LastCached
 from .util import parking_days_in_range
 
 def get_zones():
@@ -250,6 +250,14 @@ def get_attributes(kind):
             last_cached = None
         table_data = SpaceCount.objects.all()
         from .credentials import spaces_resource_id as resource_id
+    elif kind in ['leases']:
+        try:
+            last_cached = LastCached.objects.get(parameter = kind).cache_date
+            last_cached_date = datetime.datetime.strptime(last_cached, "%Y-%m-%d").date()
+        except LastCached.DoesNotExist as e:
+            last_cached = None
+        table_data = LeaseCount.objects.all()
+        from .credentials import leases_resource_id as resource_id
     else:
         raise ValueError("attribute kind = {} not found".format(kind))
 
@@ -271,14 +279,32 @@ def get_attributes(kind):
                 sc.save()
             if len(attribute_dicts) > 0:
                 LastCached(parameter = kind, cache_date = datetime.datetime.strftime(today, "%Y-%m-%d")).save()
+        elif kind in ['leases']:
+            for a in attribute_dicts:
+                if 'active_leases' not in a or a['active_leases'] is None:
+                    a['active_leases'] = 0
+                a['leases'] = a['active_leases'] # Standardize the field name within this function and the LeaseCount model.
+                lc = LeaseCount(zone = a['zone'],
+                        as_of = a['as_of'],
+                        leases = a['leases'])
+                lc.save()
+            if len(attribute_dicts) > 0:
+                LastCached(parameter = kind, cache_date = datetime.datetime.strftime(today, "%Y-%m-%d")).save()
     else:
         print("Using data pulled from local database.")
         attribute_dicts = []
         for row in table_data:
-            attribute_d = {'zone': row.zone,
-                    'as_of': row.as_of,
-                    'spaces': row.spaces,
-                    'rate': row.rate}
+            if kind in ['spaces', 'rates']:
+                attribute_d = {'zone': row.zone,
+                        'as_of': row.as_of,
+                        'spaces': row.spaces,
+                        'rate': row.rate}
+            elif kind in ['leases']:
+                attribute_d = {'zone': row.zone,
+                        'as_of': row.as_of,
+                        'leases': row.leases}
+            else:
+                raise ValueError("Unknown parameter = {}".format(kind))
             attribute_dicts.append(attribute_d)
 
     return attribute_dicts
@@ -345,12 +371,32 @@ def get_space_count(zone,start_date,end_date):
     # when the app is first run and keep them in some kind of persistent memcache,...
     # except I don't think that Django has this. One probably has to run redis
     # for this functionality.
-    pass
+
+def get_x_count(parameter,zone,start_date,end_date):
+    attribute_dicts = get_attributes(parameter)
+
+    params = defaultdict(dict)
+    for a in attribute_dicts:
+        as_of = convert_string_to_date(a['as_of'])
+        if parameter in a:
+            params[as_of][a['zone']] = a[parameter]
+
+    updates = params.keys()
+    closest_date = None
+    min_diff = datetime.timedelta(days = 99999)
+    for u in updates:
+        diff = abs( u - start_date ) + abs( u - end_date )
+        if diff < min_diff:
+            min_diff = diff
+            closest_date = u
+
+    return params[closest_date][zone]
 
 def get_lease_count(zone,start_date,end_date):
-    pass
+    return get_x_count('leases',zone,start_date,end_date)
 
 def get_hourly_rate(zone,start_date,end_date):
+    # Some corrections will be needed, e.g., for zones that come up as "MULTIRATE".
     pass
 
 
@@ -368,9 +414,11 @@ def index(request):
     all_zones = get_zones()
     zone_choices = convert_to_choices(all_zones)
     spaces, rate = get_space_count(all_zones[0],datetime.date(2018,1,1),datetime.date(2018,3,31))
+    leases = get_lease_count(all_zones[0],datetime.date(2018,1,1),datetime.date(2018,3,31))
 
     zone_features = {'spaces': spaces,
-            'rate': rate}
+            'rate': rate,
+            'leases': leases}
 
     quarter_choices = get_quarter_choices()
 
