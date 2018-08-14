@@ -25,29 +25,27 @@ def is_holiday(date_i):
     year = date_i.year
     holidays = [date(year,1,1), #NEW YEAR'S DAY
     ### HOWEVER, sometimes New Year's Day falls on a weekend and is then observed on Monday. If it falls on a Saturday (a normal non-free parking day), what happens?
+    ### Actually 2017-1-1 was a Sunday, and other days around that appeared to have normal non-holiday activity.
+    ### So if New Year's Day falls on a Sunday, it is observed (at least as a parking holiday) on Sunday.
 
+    ### Current data shows no evidence of any of these dates shifting when they fall on Saturdays or Sundays.
+    ### A few dates still need more verification.
 
-    # Really an observed_on() function is needed to offset
-    # some holidays correctly.
+        nth_m_day(year,1,3,0), #MARTIN LUTHER KING JR'S BIRTHDAY (third Monday of January)
+        easter(year)-timedelta(days=2), #GOOD FRIDAY
+        last_m_day(year,5,0), #MEMORIAL DAY (last Monday in May)
+        date(year,7,4), #INDEPENDENCE DAY (4TH OF JULY)
+        # [ ] This could be observed on a different day when
+        # the 4th falls on a Sunday.
 
-        nth_m_day(year,1,3,0),#MARTIN LUTHER KING JR'S BIRTHDAY (third Monday of January)
-        easter(year)-timedelta(days=2),#GOOD FRIDAY
-        last_m_day(year,5,0),#MEMORIAL DAY (last Monday in May)
-        date(year,7,4),#INDEPENDENCE DAY (4TH OF JULY)
-        # [ ] This could be observed on a different day.
-        nth_m_day(year,9,1,0),#LABOR DAY
-        # [ ] This could be observed on a different day.
-        date(year,11,11),#VETERANS' DAY
-        # [ ] This could be observed on a different day.
+        nth_m_day(year,9,1,0), #LABOR DAY (first Monday in September)
+        date(year,11,11), #VETERANS' DAY (seems to be observed on Saturdays when if falls on Saturdays)
+        # [ ] This could be observed on a different day (check when this is observed if it falls on a Sunday).
 
-        nth_m_day(year,11,4,3),#THANKSGIVING DAY
-        nth_m_day(year,11,4,4),#DAY AFTER THANKSGIVING
-        date(year,12,25),#CHRISTMAS DAY
-        # [ ] This could be observed on a different day.
-        date(year,12,26)]#DAY AFTER CHRISTMAS
-        # [ ] This could be observed on a different day.
-
-    print("Write an observed_on() function to correct these holidays.")
+        nth_m_day(year,11,4,3), #THANKSGIVING DAY
+        nth_m_day(year,11,4,4), #DAY AFTER THANKSGIVING
+        date(year,12,25), #CHRISTMAS DAY # There's no evidence that Christmas or the day after Christmas are
+        date(year,12,26)] #DAY AFTER CHRISTMAS # observed on days other than the 25th and 26th.
 
     return date_i in holidays
 
