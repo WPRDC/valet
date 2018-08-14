@@ -59,7 +59,7 @@ def parking_days_in_month(year,month):
     return count
 
 def parking_days_in_range(start_date,end_date):
-    """This function excepts date objects and finds the number of non-free parking days
+    """This function accepts date objects and finds the number of non-free parking days
     between them (including both the start and end dates)."""
     count = 0
     date_i = start_date
