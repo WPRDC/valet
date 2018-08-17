@@ -1,6 +1,20 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Parking Reports{% endblock %}
+
 {% block stylesheet %}
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<link rel="stylesheet" type="text/css" href="{% static 'valet/css/skeleton.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'valet/css/normalize.css' %}">
+<style>
+table {
+    width: 50%;
+}
 
+th {
+    height: 30px;
+}
+</style>
 {% endblock stylesheet %}
 
 {% block javascript %}
@@ -58,19 +72,20 @@
         });
     }
 
-    $("#id_dataset").change(function () {
-      var dataset = $(this).val();
+    $("#id_quarter").change(function () {
+        var quarter = $(this).val();
+        var zone = $("#id_zone").val();
 
-      $.ajax({
-        url: 'ajax/get_csv_resources/',
-        data: {
-          'dataset': dataset
-        },
-        dataType: 'json',
-        success: function (data) {
-            replace_selector_with_options("#id_resource",data.resource_choices)
-            refresh_field_options("#id_resource")
-        }
+        $.ajax({
+          url: 'ajax/get_results/',
+          data: {
+            'zone': zone,
+            'quarter': quarter
+          },
+          dataType: 'json',
+          success: function (data) {
+              $("#output").val(data.output)
+          }
       });
 
     });
@@ -83,45 +98,46 @@
     $("#id_input_column_index").change(generate_formulas);
     $("#id_output_field").val($('#id_output_field option').eq(1).val());
 
-    /* BEGIN Show and hide the Python sample code textarea. */
-    $(document).ready(function(){
-        $('#checkbox').change(function(){
-            if(this.checked)
-                $('#python_code_container_div').fadeIn('slow');
-            else
-                $('#python_code_container_div').fadeOut('slow');
-
-        });
-    });
-    /* END Show and hide the Python sample code textarea. */
   </script>
 {% endblock %}
 
 
 {% block content %}
-<span style="font-size:130%; font-variant: small-caps">Pittsburgh Parking Reports</span><br>
+<div class="container">
+<h3>Pittsburgh Parking Reports</h3>
 <br>
 <br>
-Pick a zone. <br>
 <form method="post">
     {% csrf_token %}
     {{ zone_picker }}
 </form>
-{{ zone_features }}
-<br>
-{{results_table }}
-
 <table>
     <tr>
-        <td>Excel formula:</td>
-        <td><textarea id="excel_formula" rows="4" cols="50"></textarea></td>
+        <th>Hour range</th>
+        <th>Total payments</th>
+        <th>Transactions</th>
+        <th>Utilization</th>
     </tr>
+{% for result in results_table %}
+    <tr>
+        <td>{{ result.hour_range }}</td>
+        <td>{{ result.total_payments }}</td>
+        <td>{{ result.transaction_count }}</td>
+        <td>{{ result.utilization }}</td>
+    </tr>
+{% endfor %}
 </table>
+
+<textarea id="output2" rows="4" cols="50"></textarea>
+<div id="output"></div>
+
+<h4>Time range</h4>
+<b>Start date:</b> {{ start_date }}, <b>End date:</b> {{ end_date }}
+<h4>Zone/lot features:</h4> 
+<b>Rate:</b> {{ zone_features.rate }}, <b>Space count:</b> {{ zone_features.spaces }}, <b>Lease count:</b> {{ zone_features.leases }} 
 <br>
-<P>
 
-{% autoescape off %}
-{{ output }}
-{% endautoescape %}
-
+</div>
 {% endblock content %}
+{% block footer %}
+{% endblock footer %}
