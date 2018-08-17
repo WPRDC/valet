@@ -1,10 +1,10 @@
-import re, ckanapi, time, datetime
+import re, ckanapi, time
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.template import loader
 from django import forms
 
-from datetime import timedelta
+from datetime import datetime, timedelta, date
 
 from pprint import pprint
 from collections import defaultdict
@@ -77,7 +77,7 @@ def get_zones():
     return zones
 
 def convert_string_to_date(s):
-    return datetime.datetime.strptime(s, "%Y-%m-%d").date()
+    return datetime.strptime(s, "%Y-%m-%d").date()
 
 def is_beginning_of_the_quarter(dt):
    return dt.day == 1 and dt.month in [1,4,7,10]
@@ -92,11 +92,14 @@ def add_quarter_to_date(d):
     return d
 
 def beginning_of_quarter(d):
-    """Takes a date and returns the first date before
+    """Takes a date (or datetime) and returns the first date before
     that that corresponds to the beginning of the quarter."""
+    now = datetime.now()
     if d == None:
-        d = datetime.datetime.now().date()
-    return d.replace(day=1, month=int((d.month-1)/3)*3+1).date()
+        d = now
+    if type(d) == type(now):
+        d = d.date()
+    return d.replace(day=1, month=int((d.month-1)/3)*3+1)
 
 def end_of_quarter(d):
     #print("The approach used in end_of_quarter may not work under some circumstances. Subtracting 31+30+31 days from 7/1 gives 3/31.")
@@ -110,16 +113,31 @@ def date_to_quarter(d):
     quarter_number = int((d.month-1)/3) + 1
     return (year, quarter_number)
 
+def verify_quarter(d):
+    year, quarter = date_to_quarter(d)
+    too_soon= False
+    too_far_back = False
+    if end_of_quarter(d) >= datetime.now().date():
+        print("Records for this date have not yet been collected.")
+        too_soon = True
+    elif beginning_of_quarter(d) < date(2012,7,23):
+        print("This date is definitely before any available parking meter data.")
+        too_far_back = True
+    return too_far_back, too_soon
+
+
 def get_quarter_choices():
-    earliest_date = datetime.date(2016,1,1)
+    earliest_date = date(2016,1,1)
     earliest_quarter = date_to_quarter(earliest_date)
 
-    now = datetime.datetime.now()
+    now = datetime.now()
     latest_quarter = date_to_quarter(now)
 
     # Note that the latest_quarter may be incomplete!
     xs = []
+    print(type(earliest_date))
     d = beginning_of_quarter(now)
+    print(type(d))
     while d >= earliest_date:
         xs.append(date_to_quarter(d))
         if d.month in [4,7,10]:
@@ -261,7 +279,7 @@ def get_attributes(kind):
     else:
         raise ValueError("attribute kind = {} not found".format(kind))
 
-    today = datetime.datetime.now().date()
+    today = datetime.now().date()
     if len(table_data) == 0 or (last_cached is not None and (today - last_cached_date > timedelta(days=3))):
         # Build/refresh cache
         print("Pulling and caching data.")
@@ -356,7 +374,7 @@ def get_space_count(zone,start_date,end_date):
 
     updates = spaces.keys()
     closest_date = None
-    min_diff = datetime.timedelta(days = 99999)
+    min_diff = timedelta(days = 99999)
     for u in updates:
         diff = abs( u - start_date ) + abs( u - end_date )
         if diff < min_diff:
@@ -383,7 +401,7 @@ def get_x_count(parameter,zone,start_date,end_date):
 
     updates = params.keys()
     closest_date = None
-    min_diff = datetime.timedelta(days = 99999)
+    min_diff = timedelta(days = 99999)
     for u in updates:
         diff = abs( u - start_date ) + abs( u - end_date )
         if diff < min_diff:
