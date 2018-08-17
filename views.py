@@ -352,11 +352,7 @@ def get_attributes(kind):
 
     return attribute_dicts
 
-def get_revenue(zone,start_date,end_date,start_hour,end_hour):
-    """This should look like a SQL query."""
-    pass
-
-def get_space_count(zone,start_date,end_date):
+def get_space_count_and_rate(zone,start_date,end_date):
     """Check the cache, and if it's been refreshed today, use the cached value."""
     # Run query on model.
     # If there's more than zero results and the dates are valid, return the space count
@@ -438,15 +434,20 @@ def get_x_count(parameter,zone,start_date,end_date):
 def get_lease_count(zone,start_date,end_date):
     return get_x_count('leases',zone,start_date,end_date)
 
-def get_hourly_rate(zone,start_date,end_date):
+def get_hourly_rate(zone,start_date,end_date,start_hour,end_hour):
     # Some corrections will be needed, e.g., for zones that come up as "MULTIRATE".
-    pass
 
+    # start_hour and end_hour are being passed since there are a few oddball 
+    # cases where the rate has been dependent on the time of day.
+    space_count, hourly_rate = get_space_count_and_rate(zone,start_date,end_date)
+    return hourly_rate
 
 def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
     """Utilization = (Revenue from parking purchases) / { ([# of spots] - 0.85*[# of leases]) * (rate per hour) * (the number of days in the time span where parking is not free) * (duration of slot in hours) }"""
     revenue = get_revenue(zone,start_date,end_date,start_hour,end_hour)
-    effective_space_count = get_space_count(zone,start_date,end_date) - 0.85*get_lease_count(zone,start_date,end_date)
+    effective_space_count = get_space_count_and_rate(zone,start_date,end_date)[0] - 0.85*get_lease_count(zone,start_date,end_date)
+
+    hourly_rate = get_hourly_rate(zone,start_date,end_date,start_hour,end_hour)
     non_free_days = parking_days_in_range(start_date,end_date)
     slot_duration = end_hour - start_hour
     assert end_hour > start_hour
@@ -456,17 +457,22 @@ def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
 def index(request):
     all_zones = get_zones()
     zone_choices = convert_to_choices(all_zones)
-    spaces, rate = get_space_count(all_zones[0],datetime.date(2018,1,1),datetime.date(2018,3,31))
-    leases = get_lease_count(all_zones[0],datetime.date(2018,1,1),datetime.date(2018,3,31))
+    quarter_choices = get_quarter_choices()
+
+    d = datetime.now().date() - timedelta(days = 365) 
+
+    start_date = beginning_of_quarter(d)
+    end_date = end_of_quarter(d)
+    spaces, rate = get_space_count_and_rate(all_zones[0],start_date,end_date)
+    leases = get_lease_count(all_zones[0],start_date,end_date)
 
     zone_features = {'spaces': spaces,
             'rate': rate,
             'leases': leases}
-
-    quarter_choices = get_quarter_choices()
+     
 
     class SpaceTimeForm(forms.Form):
-        zone = forms.ChoiceField(choices=zone_choices)
+        zone = forms.ChoiceField(choices=zone_choices) #, initial = "401 - Downtown 1")
         quarter = forms.ChoiceField(choices=quarter_choices)
         #input_field = forms.ChoiceField(choices=first_field_choices, help_text="(what you have in your spreadsheet)")
         #input_column_index = forms.CharField(initial='B',
