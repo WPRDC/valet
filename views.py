@@ -451,7 +451,7 @@ def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
     slot_duration = end_hour - start_hour
     assert end_hour > start_hour
     utilization = revenue/effective_space_count/hourly_rate/non_free_days/slot_duration
-    return utilization
+    return utilization, revenue, transaction_count
 
 def index(request):
     all_zones = get_zones()
@@ -469,11 +469,23 @@ def index(request):
     zone_features = {'spaces': spaces,
             'rate': rate,
             'leases': leases}
-     
+    
+    hour_ranges = {'8am-10am': {'start_hour': 8, 'end_hour': 10},
+                   '10am-2pm': {'start_hour': 10, 'end_hour': 14},
+                   '2pm-5pm': {'start_hour': 14, 'end_hour': 17} }
+    # [ ] Add final hour range/ranges for the Southside (maybe picking only particular days, so a different query might be needed..
+    results_table = []
+    for key in hour_ranges:
+        start_hour = hour_ranges[key]['start_hour']
+        end_hour = hour_ranges[key]['end_hour']
+        ut, revenue, transaction_count = calculate_utilization(initial_zone,start_date,end_date,start_hour,end_hour)
+        results_table.append( (key, {'utilization': ut, 'total_payments': revenue, 'transaction_count': transaction_count}) )
+
+    pprint(results_table)
 
     class SpaceTimeForm(forms.Form):
         zone = forms.ChoiceField(choices=zone_choices) #, initial = "401 - Downtown 1")
-        quarter = forms.ChoiceField(choices=quarter_choices)
+        quarter = forms.ChoiceField(choices=initial_quarter_choices)
         #input_field = forms.ChoiceField(choices=first_field_choices, help_text="(what you have in your spreadsheet)")
         #input_column_index = forms.CharField(initial='B',
         #    label="Input column",
@@ -484,8 +496,12 @@ def index(request):
     #template = loader.get_template('index.html')
     #context = {#'output': output,
     #            'zone_picker': SpaceTimeForm().as_p()}
-    context = {'zone_picker': SpaceTimeForm().as_p(),
-            'zone_features': zone_features}
+    st_form = SpaceTimeForm()
+    #st_form.fields['zone'].initial = ["401 - Downtown 1"]
+
+    context = {'zone_picker': st_form.as_p(),
+            'zone_features': zone_features,
+            'results_table': results_table}
     return render(request, 'valet/index.html', context)
 
     #return HttpResponse(template.render(context, request))

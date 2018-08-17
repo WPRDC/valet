@@ -101,9 +101,6 @@
 {% block content %}
 <span style="font-size:130%; font-variant: small-caps">Pittsburgh Parking Reports</span><br>
 <br>
-Here you can custom-design a spreadsheet formula to convert a value you have into something appearing in one of the many WPRDC datasets.
-<br>
-<br>
 <br>
 Pick a zone. <br>
 <form method="post">
@@ -111,6 +108,9 @@ Pick a zone. <br>
     {{ zone_picker }}
 </form>
 {{ zone_features }}
+<br>
+{{results_table }}
+
 <table>
     <tr>
         <td>Excel formula:</td>
