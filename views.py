@@ -456,14 +456,15 @@ def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
 def index(request):
     all_zones = get_zones()
     zone_choices = convert_to_choices(all_zones)
-    quarter_choices = get_quarter_choices()
+    initial_zone = all_zones[0]
+    initial_quarter_choices = get_quarter_choices() # These should eventually be dependent on the initially chosen zone.
 
     d = datetime.now().date() - timedelta(days = 365) 
 
     start_date = beginning_of_quarter(d)
     end_date = end_of_quarter(d)
-    spaces, rate = get_space_count_and_rate(all_zones[0],start_date,end_date)
-    leases = get_lease_count(all_zones[0],start_date,end_date)
+    spaces, rate = get_space_count_and_rate(initial_zone,start_date,end_date)
+    leases = get_lease_count(initial_zone,start_date,end_date)
 
     zone_features = {'spaces': spaces,
             'rate': rate,
