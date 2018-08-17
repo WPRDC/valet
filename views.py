@@ -262,16 +262,18 @@ def get_attributes(kind):
     from .credentials import site, ckan_api_key as API_key
     if kind in ['spaces', 'rates']:
         try:
-            last_cached = LastCached.objects.get(parameter = kind).cache_date
-            last_cached_date = datetime.datetime.strptime(last_cached, "%Y-%m-%d").date()
+            last_cached = LastCached.objects.get(parameter = kind)
+            last_cached_d_str = last_cached.cache_date
+            last_cached_date = datetime.strptime(last_cached_d_str, "%Y-%m-%d").date()
         except LastCached.DoesNotExist as e:
             last_cached = None
         table_data = SpaceCount.objects.all()
         from .credentials import spaces_resource_id as resource_id
     elif kind in ['leases']:
         try:
-            last_cached = LastCached.objects.get(parameter = kind).cache_date
-            last_cached_date = datetime.datetime.strptime(last_cached, "%Y-%m-%d").date()
+            last_cached = LastCached.objects.get(parameter = kind)
+            last_cached_d_str = last_cached.cache_date
+            last_cached_date = datetime.strptime(last_cached_d_str, "%Y-%m-%d").date()
         except LastCached.DoesNotExist as e:
             last_cached = None
         table_data = LeaseCount.objects.all()
@@ -290,24 +292,47 @@ def get_attributes(kind):
                 if a['zone'] == '424 - Technology Drive':
                     a['rate'] = 2
                     print("For now, just coerce this rate to $2 per hour, but eventually something smarter should be done.")
-                sc = SpaceCount(zone = a['zone'],
-                        as_of = a['as_of'],
-                        spaces = a['spaces'],
-                        rate = a['rate'])
-                sc.save()
+                fetched = SpaceCount.objects.filter(zone = a['zone'], as_of = a['as_of']).first()
+                if fetched is None:
+                    sc = SpaceCount(zone = a['zone'],
+                            as_of = a['as_of'],
+                            spaces = a['spaces'],
+                            rate = a['rate'])
+                    sc.save()
+                elif fetched.spaces != a['spaces'] or fetched.rate != a['rate']:
+                    fetched.spaces = a['spaces']
+                    fetched.rate = a['rate']
+                    fetched.save()
+                # Otherwise, it doesn't need to be updated.
+
             if len(attribute_dicts) > 0:
-                LastCached(parameter = kind, cache_date = datetime.datetime.strftime(today, "%Y-%m-%d")).save()
+                if last_cached is None: # This logic should be replacable with update_or_create.
+                    LastCached(parameter = kind, cache_date = datetime.strftime(today, "%Y-%m-%d")).save()
+                else:
+                    last_cached.cache_date = datetime.strftime(today, "%Y-%m-%d")
+                    last_cached.save()
         elif kind in ['leases']:
             for a in attribute_dicts:
                 if 'active_leases' not in a or a['active_leases'] is None:
                     a['active_leases'] = 0
                 a['leases'] = a['active_leases'] # Standardize the field name within this function and the LeaseCount model.
-                lc = LeaseCount(zone = a['zone'],
-                        as_of = a['as_of'],
-                        leases = a['leases'])
-                lc.save()
+                fetched = LeaseCount.objects.filter(zone = a['zone'], as_of = a['as_of']).first()
+                if fetched is None:
+                    lc = LeaseCount(zone = a['zone'],
+                            as_of = a['as_of'],
+                            leases = a['leases'])
+                    lc.save()
+                elif fetched.leases != a['leases']:
+                    fetched.leases = a['leases']
+                    fetched.save()
+                # Otherwise, it doesn't need to be updated.
+
             if len(attribute_dicts) > 0:
-                LastCached(parameter = kind, cache_date = datetime.datetime.strftime(today, "%Y-%m-%d")).save()
+                if last_cached is None: # This logic should be replacable with update_or_create.
+                    LastCached(parameter = kind, cache_date = datetime.strftime(today, "%Y-%m-%d")).save()
+                else:
+                    last_cached.cache_date = datetime.strftime(today, "%Y-%m-%d")
+                    last_cached.save()
     else:
         print("Using data pulled from local database.")
         attribute_dicts = []
