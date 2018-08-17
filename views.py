@@ -408,8 +408,7 @@ def get_space_count_and_rate(zone,start_date,end_date):
 
     # But maybe it's best to just pull all space counts, lease counts, and hourly rates
     # when the app is first run and keep them in some kind of persistent memcache,...
-    # except I don't think that Django has this. One probably has to run redis
-    # for this functionality.
+    # [ ] Look into installing Memcached.
 
 def get_x_count(parameter,zone,start_date,end_date):
     attribute_dicts = get_attributes(parameter)
@@ -444,7 +443,7 @@ def get_hourly_rate(zone,start_date,end_date,start_hour,end_hour):
 
 def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
     """Utilization = (Revenue from parking purchases) / { ([# of spots] - 0.85*[# of leases]) * (rate per hour) * (the number of days in the time span where parking is not free) * (duration of slot in hours) }"""
-    revenue = get_revenue(zone,start_date,end_date,start_hour,end_hour)
+    revenue, transaction_count = get_revenue_and_count(zone,start_date,end_date,start_hour,end_hour)
     effective_space_count = get_space_count_and_rate(zone,start_date,end_date)[0] - 0.85*get_lease_count(zone,start_date,end_date)
 
     hourly_rate = get_hourly_rate(zone,start_date,end_date,start_hour,end_hour)
