@@ -1,6 +1,7 @@
 import re, ckanapi, time
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.http import JsonResponse
 from django.template import loader
 from django import forms
 
@@ -11,6 +12,12 @@ from collections import defaultdict
 
 from .models import SpaceCount, LeaseCount, LastCached
 from .util import parking_days_in_range
+
+
+hour_ranges = {'8am-10am': {'start_hour': 8, 'end_hour': 10},
+               '10am-2pm': {'start_hour': 10, 'end_hour': 14},
+               '2pm-5pm': {'start_hour': 14, 'end_hour': 17} }
+# [ ] Add final hour range/ranges for the Southside (maybe picking only particular days, so a different query might be needed).
 
 def get_zones():
     zones = ["301 - Sheridan Harvard Lot",
@@ -113,6 +120,17 @@ def date_to_quarter(d):
     quarter_number = int((d.month-1)/3) + 1
     return (year, quarter_number)
 
+def quarter_to_dates(q):
+    if re.match(' Q',q) is not None:
+        raise RuntimeError("{} is not a properly formed quarter (which should be of the form '2016 Q2').".format(q))
+    yr, q_digit = q.split(' Q')
+    year = int(yr)
+    quarter_number = int(q_digit)
+    month = (quarter_number-1)*3 + 1
+    start_date = date(year,month,1)
+    end_date = end_of_quarter(start_date)
+    return start_date, end_date
+
 def verify_quarter(d):
     year, quarter = date_to_quarter(d)
     too_soon= False
@@ -146,7 +164,6 @@ def get_quarter_choices():
             d = d.replace(month = 10, year = d.year-1)
         else:
             raise ValueError("The date {} does not correspond to the beginning of a quarter.".format(d))
-        print(d)
 
     choices = []
     for x in xs:
@@ -162,7 +179,8 @@ def get_quarter_choices():
 def convert_to_choices(xs):
     choices = []
     for x in xs:
-        zone_code = re.sub(" - .*","",str(x))
+        #zone_code = re.sub(" - .*","",str(x))
+        zone_code = x
         choices.append( (zone_code, x) )
     return choices
 
@@ -453,6 +471,46 @@ def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
     utilization = revenue/effective_space_count/hourly_rate/non_free_days/slot_duration
     return utilization, revenue, transaction_count
 
+def load_and_cache_utilization(zone,start_date,end_date,start_hour,end_hour):
+    # Should this instead combine all the hour ranges?
+    return calculate_utilization(zone,start_date,end_date,start_hour,end_hour)
+
+def get_results(request):
+    """
+    Look up the utilization, total payments, and transaction count for this combination
+    of zone and quarter (eventually extend this to date range) and return them.
+    """
+    zone = request.GET.get('zone', None)
+    quarter = request.GET.get('quarter', None)
+    # Convert quarter to start_date and end_date
+    print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
+
+    start_date, end_date = quarter_to_dates(quarter)
+  
+    r_list = []
+    for key in hour_ranges:
+        start_hour = hour_ranges[key]['start_hour']
+        end_hour = hour_ranges[key]['end_hour']
+        new_row = load_and_cache_utilization(zone,start_date,end_date,start_hour,end_hour)
+        r_list.append(new_row)
+
+    #result = any(p['id'] == dataset_id for p in rlist)
+    #match = None
+    #for p in rlist:
+    #    if p['id'] == dataset_id:
+    #        match = p
+    #        break
+
+    #resource_choices = []
+    #for pair in csv_resource_choices(p):
+    #   resource_choices.append(pair[::-1])
+    data = {
+        'output': r_list
+    }
+
+    pprint(data)
+    return JsonResponse(data)
+
 def index(request):
     all_zones = get_zones()
     zone_choices = convert_to_choices(all_zones)
@@ -470,18 +528,14 @@ def index(request):
             'rate': rate,
             'leases': leases}
     
-    hour_ranges = {'8am-10am': {'start_hour': 8, 'end_hour': 10},
-                   '10am-2pm': {'start_hour': 10, 'end_hour': 14},
-                   '2pm-5pm': {'start_hour': 14, 'end_hour': 17} }
-    # [ ] Add final hour range/ranges for the Southside (maybe picking only particular days, so a different query might be needed..
-    results_table = []
+    results = []
     for key in hour_ranges:
         start_hour = hour_ranges[key]['start_hour']
         end_hour = hour_ranges[key]['end_hour']
         ut, revenue, transaction_count = calculate_utilization(initial_zone,start_date,end_date,start_hour,end_hour)
-        results_table.append( (key, {'utilization': ut, 'total_payments': revenue, 'transaction_count': transaction_count}) )
+        results.append( {'hour_range': key, 'total_payments': "{:.2f}".format(revenue), 'transaction_count': transaction_count, 'utilization': "{:.3f}".format(ut)} )
 
-    pprint(results_table)
+    pprint(results)
 
     class SpaceTimeForm(forms.Form):
         zone = forms.ChoiceField(choices=zone_choices) #, initial = "401 - Downtown 1")
@@ -499,9 +553,12 @@ def index(request):
     st_form = SpaceTimeForm()
     #st_form.fields['zone'].initial = ["401 - Downtown 1"]
 
+
     context = {'zone_picker': st_form.as_p(),
+            'start_date': start_date,
+            'end_date': end_date,
             'zone_features': zone_features,
-            'results_table': results_table}
+            'results': format_as_table(results)}
     return render(request, 'valet/index.html', context)
 
     #return HttpResponse(template.render(context, request))
