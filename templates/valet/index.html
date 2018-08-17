@@ -1,0 +1,127 @@
+{% block stylesheet %}
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+{% endblock stylesheet %}
+
+{% block javascript %}
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script>
+
+    function replace_selector_with_options(selector,options) {
+        var $el = $(selector);
+        $el.empty(); // remove old options
+        $.each(options, function(key,value) {
+          $el.append($("<option></option>")
+               .attr("value", value).text(key));
+               });
+    }
+
+    function refresh_field_options() {
+        var resource = $("#id_resource").val();
+
+        $.ajax({
+        url: 'ajax/get_fields/',
+        data: {
+          'resource': resource
+        },
+        dataType: 'json',
+        success: function (data) {
+            replace_selector_with_options("#id_input_field",data.field_choices)
+            replace_selector_with_options("#id_output_field",data.field_choices)
+            $("#id_output_field").val($('#id_output_field option').eq(1).val());
+            }
+        });
+
+    }
+
+    function generate_formulas() {
+        var resource = $("#id_resource").val();
+        var input_field = $("#id_input_field").val();
+        var output_field = $("#id_output_field").val();
+        var spreadsheet_column = $("#id_input_column_index").val();
+
+
+        $.ajax({
+        url: 'ajax/get_formulas/',
+        data: {
+          'resource': resource,
+          'input_field': input_field,
+          'output_field': output_field,
+          'spreadsheet_column': spreadsheet_column
+        },
+        dataType: 'json',
+        success: function (data) {
+            $("#excel_formula").val(data.excel_formula)
+            $("#google_sheets_formula").val(data.google_sheets_formula)
+            $("#python_code").val(data.python_code)
+            }
+        });
+    }
+
+    $("#id_dataset").change(function () {
+      var dataset = $(this).val();
+
+      $.ajax({
+        url: 'ajax/get_csv_resources/',
+        data: {
+          'dataset': dataset
+        },
+        dataType: 'json',
+        success: function (data) {
+            replace_selector_with_options("#id_resource",data.resource_choices)
+            refresh_field_options("#id_resource")
+        }
+      });
+
+    });
+
+    $("#id_resource").change(refresh_field_options);
+
+    $("#id_resource").change(generate_formulas);
+    $("#id_input_field").change(generate_formulas);
+    $("#id_output_field").change(generate_formulas);
+    $("#id_input_column_index").change(generate_formulas);
+    $("#id_output_field").val($('#id_output_field option').eq(1).val());
+
+    /* BEGIN Show and hide the Python sample code textarea. */
+    $(document).ready(function(){
+        $('#checkbox').change(function(){
+            if(this.checked)
+                $('#python_code_container_div').fadeIn('slow');
+            else
+                $('#python_code_container_div').fadeOut('slow');
+
+        });
+    });
+    /* END Show and hide the Python sample code textarea. */
+  </script>
+{% endblock %}
+
+
+{% block content %}
+<span style="font-size:130%; font-variant: small-caps">Pittsburgh Parking Reports</span><br>
+<br>
+Here you can custom-design a spreadsheet formula to convert a value you have into something appearing in one of the many WPRDC datasets.
+<br>
+<br>
+<br>
+Pick a zone. <br>
+<form method="post">
+    {% csrf_token %}
+    {{ zone_picker }}
+</form>
+{{ zone_features }}
+<table>
+    <tr>
+        <td>Excel formula:</td>
+        <td><textarea id="excel_formula" rows="4" cols="50"></textarea></td>
+    </tr>
+</table>
+<br>
+<P>
+
+{% autoescape off %}
+{{ output }}
+{% endautoescape %}
+
+{% endblock content %}
