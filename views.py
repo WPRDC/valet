@@ -11,7 +11,7 @@ from pprint import pprint
 from collections import defaultdict
 
 from .models import SpaceCount, LeaseCount, LastCached
-from .util import parking_days_in_range
+from .util import parking_days_in_range, format_as_table
 
 
 hour_ranges = {'8am-10am': {'start_hour': 8, 'end_hour': 10},
@@ -472,7 +472,8 @@ def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
 
 def load_and_cache_utilization(zone,start_date,end_date,start_hour,end_hour):
     # Should this instead combine all the hour ranges?
-    return calculate_utilization(zone,start_date,end_date,start_hour,end_hour)
+    ut, rev, transaction_count = calculate_utilization(zone,start_date,end_date,start_hour,end_hour)
+    return {'total_payments': rev, 'transaction_count': transaction_count, 'utilization': ut}
 
 def get_results(request):
     """
@@ -490,8 +491,11 @@ def get_results(request):
     for key in hour_ranges:
         start_hour = hour_ranges[key]['start_hour']
         end_hour = hour_ranges[key]['end_hour']
-        new_row = load_and_cache_utilization(zone,start_date,end_date,start_hour,end_hour)
-        r_list.append(new_row)
+        r_dict = load_and_cache_utilization(zone,start_date,end_date,start_hour,end_hour)
+        #results_dict['hour_range'] = key
+        #r_list.append(results_dict)
+
+        r_list.append( {'hour_range': key, 'total_payments': "{:>12,.2f}".format(r_dict['total_payments']), 'transaction_count': r_dict['transaction_count'], 'utilization': "{:.3f}".format(r_dict['utilization'])} )
 
     #result = any(p['id'] == dataset_id for p in rlist)
     #match = None
@@ -504,7 +508,7 @@ def get_results(request):
     #for pair in csv_resource_choices(p):
     #   resource_choices.append(pair[::-1])
     data = {
-        'output': r_list
+        'output_table': format_as_table(r_list)
     }
 
     pprint(data)
@@ -532,7 +536,7 @@ def index(request):
         start_hour = hour_ranges[key]['start_hour']
         end_hour = hour_ranges[key]['end_hour']
         ut, revenue, transaction_count = calculate_utilization(initial_zone,start_date,end_date,start_hour,end_hour)
-        results.append( {'hour_range': key, 'total_payments': "{:.2f}".format(revenue), 'transaction_count': transaction_count, 'utilization': "{:.3f}".format(ut)} )
+        results.append( {'hour_range': key, 'total_payments': "{:>12,.2f}".format(revenue), 'transaction_count': transaction_count, 'utilization': "{:.3f}".format(ut)} )
 
     pprint(results)
 
@@ -557,7 +561,8 @@ def index(request):
             'start_date': start_date,
             'end_date': end_date,
             'zone_features': zone_features,
-            'results': format_as_table(results)}
+            'results': results,
+            'output_table': format_as_table(results)}
     return render(request, 'valet/index.html', context)
 
     #return HttpResponse(template.render(context, request))
