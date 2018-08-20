@@ -84,7 +84,25 @@ th {
           },
           dataType: 'json',
           success: function (data) {
-              $("#output").val(data.output)
+              $("#output").html(data.output_table)
+          }
+      });
+
+    });
+
+    $("#id_zone").change(function () {
+        var zone = $(this).val();
+        var quarter = $("#id_quarter").val();
+
+        $.ajax({
+          url: 'ajax/get_results/',
+          data: {
+            'zone': zone,
+            'quarter': quarter
+          },
+          dataType: 'json',
+          success: function (data) {
+              $("#output").html(data.output_table)
           }
       });
 
@@ -92,50 +110,40 @@ th {
 
     $("#id_resource").change(refresh_field_options);
 
-    $("#id_resource").change(generate_formulas);
-    $("#id_input_field").change(generate_formulas);
     $("#id_output_field").change(generate_formulas);
-    $("#id_input_column_index").change(generate_formulas);
     $("#id_output_field").val($('#id_output_field option').eq(1).val());
 
   </script>
 {% endblock %}
 
-
 {% block content %}
 <div class="container">
-<h3>Pittsburgh Parking Reports</h3>
-<br>
-<br>
-<form method="post">
-    {% csrf_token %}
-    {{ zone_picker }}
-</form>
-<table>
-    <tr>
-        <th>Hour range</th>
-        <th>Total payments</th>
-        <th>Transactions</th>
-        <th>Utilization</th>
-    </tr>
-{% for result in results_table %}
-    <tr>
-        <td>{{ result.hour_range }}</td>
-        <td>{{ result.total_payments }}</td>
-        <td>{{ result.transaction_count }}</td>
-        <td>{{ result.utilization }}</td>
-    </tr>
-{% endfor %}
-</table>
-
-<textarea id="output2" rows="4" cols="50"></textarea>
-<div id="output"></div>
-
-<h4>Time range</h4>
-<b>Start date:</b> {{ start_date }}, <b>End date:</b> {{ end_date }}
-<h4>Zone/lot features:</h4> 
-<b>Rate:</b> {{ zone_features.rate }}, <b>Space count:</b> {{ zone_features.spaces }}, <b>Lease count:</b> {{ zone_features.leases }} 
-<br>
+    <h3>Pittsburgh Parking Reports</h3>
+    <br>
+    <div class="row">
+         <div class="six columns">
+             <form method="post">
+                {% csrf_token %}
+                {{ zone_picker }}
+            </form>
+        </div>
+        <div class="six columns">
+            <h5>Zone/lot features:</h5> 
+            <b>Rate:</b> ${{ zone_features.rate }}/hour, <b>Space count:</b> {{ zone_features.spaces }}, <b>Lease count:</b> {{ zone_features.leases }} 
+            <P>
+            <h5>Time range</h5>
+            <b>Start date:</b> {{ start_date }}, <b>End date:</b> {{ end_date }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="twelve columns">
+            <div id="output">
+                {% autoescape off %}
+                {{output_table}}
+                {% endautoescape %}
+            </div>
+        </div>
+    </div>
 
 </div>
 {% endblock content %}
