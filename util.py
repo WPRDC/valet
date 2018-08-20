@@ -4,6 +4,7 @@ from datetime import date, timedelta
 #from dateutil.relativedelta import relativedelta
 
 from calendar import monthrange
+from pprint import pprint
 
 ## A bunch of date calculation functions (not currently in use in the code) ##
 def nth_m_day(year,month,n,m):
@@ -69,3 +70,36 @@ def parking_days_in_range(start_date,end_date):
         date_i += timedelta(days=1)
     return count
 ## End of date-calculation functions ##
+
+def format_as_table(results):
+    """To simplify piping new results via AJAX, use Python to generate the
+    table and then send that to the appropriate div."""
+# The original Jinja template looked like this:
+#<table>
+#    <tr>
+#        <th>Hour range</th>
+#        <th>Total payments</th>
+#        <th>Transactions</th>
+#        <th>Utilization</th>
+#    </tr>
+#{% for result in results_table %}
+#    <tr>
+#        <td>{{ result.hour_range }}</td>
+#        <td>{{ result.total_payments }}</td>
+#        <td>{{ result.transaction_count }}</td>
+#        <td>{{ result.utilization }}</td>
+#    </tr>
+#{% endfor %}
+#</table>
+    t = """<table>\n
+    \t<tr>\n
+    \t\t<th>Hour range</th>\n
+    \t\t<th>Total payments</th>\n
+    \t\t<th>Transactions</th>\n
+    \t\t<th>Utilization</th>\n
+    \t</tr>\n"""
+    for r in results:
+        t += "\t<tr>\n \t\t<td>{}</td>\n \t\t<td>{}</td>\n \t\t<td>{}</td>\n \t\t<td>{}</td>\n \t</tr>\n".format(r['hour_range'], r['total_payments'], r['transaction_count'], r['utilization'])
+    t += "</table>\n"
+
+    return t
