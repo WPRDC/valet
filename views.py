@@ -475,6 +475,26 @@ def load_and_cache_utilization(zone,start_date,end_date,start_hour,end_hour):
     ut, rev, transaction_count = calculate_utilization(zone,start_date,end_date,start_hour,end_hour)
     return {'total_payments': rev, 'transaction_count': transaction_count, 'utilization': ut}
 
+def get_dates(request):
+    """
+    Look up the start_date and end_date for this combination
+    of zone and quarter (eventually extend this to date range) and return them.
+    """
+    zone = request.GET.get('zone', None)
+    quarter = request.GET.get('quarter', None)
+    # Convert quarter to start_date and end_date
+    print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
+
+    start_date, end_date = quarter_to_dates(quarter)
+  
+    data = {
+        'start_date': start_date,
+        'end_date': end_date
+    }
+
+    pprint(data)
+    return JsonResponse(data)
+
 def get_results(request):
     """
     Look up the utilization, total payments, and transaction count for this combination

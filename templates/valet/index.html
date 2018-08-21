@@ -66,8 +66,22 @@ th {
         dataType: 'json',
         success: function (data) {
             $("#excel_formula").val(data.excel_formula)
-            $("#google_sheets_formula").val(data.google_sheets_formula)
-            $("#python_code").val(data.python_code)
+            }
+        });
+    }
+
+    function refresh_dates() {
+        var quarter = $("#id_quarter").val();
+
+        $.ajax({
+        url: 'ajax/get_dates/',
+        data: {
+          'quarter': quarter
+        },
+        dataType: 'json',
+        success: function (data) {
+            $("#start_date").html(data.start_date)
+            $("#end_date").html(data.end_date);
             }
         });
     }
@@ -108,6 +122,7 @@ th {
 
     });
 
+    $("#id_quarter").change(refresh_dates);
     $("#id_resource").change(refresh_field_options);
 
     $("#id_output_field").change(generate_formulas);
@@ -132,9 +147,10 @@ th {
             <b>Rate:</b> ${{ zone_features.rate }}/hour, <b>Space count:</b> {{ zone_features.spaces }}, <b>Lease count:</b> {{ zone_features.leases }} 
             <P>
             <h5>Time range</h5>
-            <b>Start date:</b> {{ start_date }}, <b>End date:</b> {{ end_date }}
+            <b>Start date:</b> <span id="start_date">{{ start_date }}</span>, <b>End date:</b> <span id="end_date">{{ end_date }}</span>
         </div>
     </div>
+    <P>
     <div class="row">
         <div class="twelve columns">
             <div id="output">
