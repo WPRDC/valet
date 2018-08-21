@@ -434,6 +434,8 @@ def get_x_count(parameter,zone,start_date,end_date):
         as_of = convert_string_to_date(a['as_of'])
         if parameter in a:
             params[as_of][a['zone']] = a[parameter]
+        #else:
+        #    params[as_of][a['zone']] = None
 
     updates = params.keys()
     closest_date = None
@@ -444,7 +446,9 @@ def get_x_count(parameter,zone,start_date,end_date):
             min_diff = diff
             closest_date = u
 
-    return params[closest_date][zone]
+    if closest_date in params and zone in params[closest_date]:
+        return params[closest_date][zone]
+    return None
 
 def get_lease_count(zone,start_date,end_date):
     return get_x_count('leases',zone,start_date,end_date)
@@ -460,7 +464,10 @@ def get_hourly_rate(zone,start_date,end_date,start_hour,end_hour):
 def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
     """Utilization = (Revenue from parking purchases) / { ([# of spots] - 0.85*[# of leases]) * (rate per hour) * (the number of days in the time span where parking is not free) * (duration of slot in hours) }"""
     revenue, transaction_count = get_revenue_and_count(zone,start_date,end_date,start_hour,end_hour)
-    effective_space_count = get_space_count_and_rate(zone,start_date,end_date)[0] - 0.85*get_lease_count(zone,start_date,end_date)
+    lease_count = get_lease_count(zone,start_date,end_date)
+    if lease_count is None:
+        lease_count = 0
+    effective_space_count = get_space_count_and_rate(zone,start_date,end_date)[0] - 0.85*lease_count
 
     hourly_rate = get_hourly_rate(zone,start_date,end_date,start_hour,end_hour)
     non_free_days = parking_days_in_range(start_date,end_date)
