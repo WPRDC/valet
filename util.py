@@ -71,6 +71,11 @@ def parking_days_in_range(start_date,end_date):
     return count
 ## End of date-calculation functions ##
 
+def format_row(hour_range,total_payments,transaction_count,utilization):
+    revenue = "${:,.2f}".format(total_payments)
+    row = {'hour_range': hour_range, 'total_payments': "{:>12}".format(revenue), 'transaction_count': transaction_count, 'utilization': "{:.3f}".format(utilization)}
+    return row
+
 def format_as_table(results):
     """To simplify piping new results via AJAX, use Python to generate the
     table and then send that to the appropriate div."""

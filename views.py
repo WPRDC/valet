@@ -11,7 +11,7 @@ from pprint import pprint
 from collections import defaultdict
 
 from .models import SpaceCount, LeaseCount, LastCached
-from .util import parking_days_in_range, format_as_table
+from .util import parking_days_in_range, format_as_table, format_row
 
 
 hour_ranges = {'8am-10am': {'start_hour': 8, 'end_hour': 10},
@@ -514,8 +514,8 @@ def get_results(request):
         r_dict = load_and_cache_utilization(zone,start_date,end_date,start_hour,end_hour)
         #results_dict['hour_range'] = key
         #r_list.append(results_dict)
-
-        r_list.append( {'hour_range': key, 'total_payments': "{:>12,.2f}".format(r_dict['total_payments']), 'transaction_count': r_dict['transaction_count'], 'utilization': "{:.3f}".format(r_dict['utilization'])} )
+        row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'])
+        r_list.append( row )
 
     #result = any(p['id'] == dataset_id for p in rlist)
     #match = None
@@ -556,8 +556,10 @@ def index(request):
         start_hour = hour_ranges[key]['start_hour']
         end_hour = hour_ranges[key]['end_hour']
         ut, revenue, transaction_count = calculate_utilization(initial_zone,start_date,end_date,start_hour,end_hour)
-        results.append( {'hour_range': key, 'total_payments': "{:>12,.2f}".format(revenue), 'transaction_count': transaction_count, 'utilization': "{:.3f}".format(ut)} )
-
+        #results.append( {'hour_range': key, 'total_payments': "{:>12,.2f}".format(revenue), 'transaction_count': transaction_count, 'utilization': "{:.3f}".format(ut)} )
+        #results.append( {'hour_range': key, 'total_payments': revenue, 'transaction_count': transaction_count, 'utilization': ut} )
+        row = format_row(key, revenue, transaction_count, ut)
+        results.append( row )
     pprint(results)
 
     class SpaceTimeForm(forms.Form):
@@ -576,13 +578,14 @@ def index(request):
     st_form = SpaceTimeForm()
     #st_form.fields['zone'].initial = ["401 - Downtown 1"]
 
+    output_table = format_as_table(results)
 
     context = {'zone_picker': st_form.as_p(),
             'start_date': start_date,
             'end_date': end_date,
             'zone_features': zone_features,
             'results': results,
-            'output_table': format_as_table(results)}
+            'output_table': output_table}
     return render(request, 'valet/index.html', context)
 
     #return HttpResponse(template.render(context, request))
