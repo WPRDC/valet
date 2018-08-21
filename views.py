@@ -153,9 +153,7 @@ def get_quarter_choices():
 
     # Note that the latest_quarter may be incomplete!
     xs = []
-    print(type(earliest_date))
     d = beginning_of_quarter(now)
-    print(type(d))
     while d >= earliest_date:
         xs.append(date_to_quarter(d))
         if d.month in [4,7,10]:
@@ -529,10 +527,11 @@ def get_results(request):
     #for pair in csv_resource_choices(p):
     #   resource_choices.append(pair[::-1])
     data = {
+        'display_zone': zone,
+        'display_quarter': quarter,
         'output_table': format_as_table(r_list)
     }
 
-    pprint(data)
     return JsonResponse(data)
 
 def index(request):
@@ -540,6 +539,7 @@ def index(request):
     zone_choices = convert_to_choices(all_zones)
     initial_zone = all_zones[0]
     initial_quarter_choices = get_quarter_choices() # These should eventually be dependent on the initially chosen zone.
+    initial_quarter = initial_quarter_choices[0][0]
 
     d = datetime.now().date() - timedelta(days = 365) 
 
@@ -584,6 +584,8 @@ def index(request):
     context = {'zone_picker': st_form.as_p(),
             'start_date': format_date(start_date),
             'end_date': format_date(end_date),
+            'display_zone': initial_zone,
+            'display_quarter': initial_quarter,
             'zone_features': zone_features,
             'results': results,
             'output_table': output_table}
