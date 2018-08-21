@@ -99,14 +99,14 @@ def format_as_table(results):
 #    </tr>
 #{% endfor %}
 #</table>
-    t = """<table>\n
-    \t<thead>\n
-    \t<tr>\n
-    \t\t<th>Hour range</th>\n
-    \t\t<th>Total payments</th>\n
-    \t\t<th>Transactions</th>\n
-    \t\t<th>Utilization</th>\n
-    \t</tr>\n
+    t = """<table>
+    \t<thead>
+    \t<tr>
+    \t\t<th>Hour range</th>
+    \t\t<th>Total payments</th>
+    \t\t<th>Transactions</th>
+    \t\t<th>Utilization</th>
+    \t</tr>
     \t</thead>\n"""
     t += "\t<tbody>\n"
     for r in results:
