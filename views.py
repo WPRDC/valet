@@ -24,7 +24,7 @@ def get_zones():
         "302 - Sheridan Kirkwood Lot",
         "304 - Tamello Beatty Lot",
         "307 - Eva Beatty Lot",
-        "308 - Harvard Beatty Lot",
+        #"308 - Harvard Beatty Lot", # There's no space counts for this one.
         "311 - Ansley Beatty Lot",
         "314 - Penn Circle NW Lot",
         "321 - Beacon Bartlett Lot",
@@ -32,9 +32,8 @@ def get_zones():
         "323 - Douglas Phillips Lot",
         "324 - Forbes Murray Lot",
         "325 - JCC/Forbes Lot",
-        "301 - Sheridan Harvard Lot",
         "328 - Ivy Bellefonte Lot",
-        "329 - Centre Craig",
+        #"329 - Centre Craig", # There's no space counts for this one.
         "331 - Homewood Zenith Lot",
         "334 - Taylor Street Lot",
         "335 - Friendship Cedarville Lot",
@@ -80,7 +79,8 @@ def get_zones():
         "424 - Technology Drive",
         "425 - Bakery Sq",
         "426 - Hill District",
-        "427 - Knoxville"]
+        "427 - Knoxville" # [ ] There's no data for this one yet.
+        ]
     return zones
 
 def convert_string_to_date(s):
