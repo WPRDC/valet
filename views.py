@@ -1,5 +1,5 @@
 import re, ckanapi, time
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.template import loader
@@ -542,6 +542,9 @@ def get_results(request):
     return JsonResponse(data)
 
 def index(request):
+    if not request.user.is_authenticated():
+        return redirect('%s?next=%s' % ('/admin/login/', request.path))
+
     all_zones = get_zones()
     zone_choices = convert_to_choices(all_zones)
     initial_zone = all_zones[0]
