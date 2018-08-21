@@ -167,11 +167,12 @@ def get_quarter_choices():
 
     choices = []
     for x in xs:
-        quarter_code = "{} Q{}{}".format(x[0],x[1])
+        quarter_code = "{} Q{}".format(x[0],x[1])
+        quarter_code_label = str(quarter_code)
         if len(choices) == 0:
             addendum = ' (incomplete)'
-            quarter_code += addendum
-        choices.append( (quarter_code, quarter_code) )
+            quarter_code_label += addendum
+        choices.append( (quarter_code, quarter_code_label) )
 
     return choices
 
