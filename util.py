@@ -1,6 +1,6 @@
 """Many of the below functions were originally imported from park-shark/hm_util.py."""
 from dateutil.easter import * # pip install python-dateutil
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 #from dateutil.relativedelta import relativedelta
 
 from calendar import monthrange
@@ -70,6 +70,9 @@ def parking_days_in_range(start_date,end_date):
         date_i += timedelta(days=1)
     return count
 ## End of date-calculation functions ##
+
+def format_date(d):
+    return datetime.strftime(d,"%Y-%m-%d")
 
 def format_row(hour_range,total_payments,transaction_count,utilization):
     revenue = "${:,.2f}".format(total_payments)

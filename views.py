@@ -11,7 +11,7 @@ from pprint import pprint
 from collections import defaultdict
 
 from .models import SpaceCount, LeaseCount, LastCached
-from .util import parking_days_in_range, format_as_table, format_row
+from .util import parking_days_in_range, format_as_table, format_row, format_date
 
 
 hour_ranges = {'8am-10am': {'start_hour': 8, 'end_hour': 10},
@@ -489,8 +489,8 @@ def get_dates(request):
     start_date, end_date = quarter_to_dates(quarter)
   
     data = {
-        'start_date': start_date,
-        'end_date': end_date
+        'start_date': format_date(start_date),
+        'end_date': format_date(end_date)
     }
 
     pprint(data)
@@ -582,8 +582,8 @@ def index(request):
     output_table = format_as_table(results)
 
     context = {'zone_picker': st_form.as_p(),
-            'start_date': start_date,
-            'end_date': end_date,
+            'start_date': format_date(start_date),
+            'end_date': format_date(end_date),
             'zone_features': zone_features,
             'results': results,
             'output_table': output_table}
