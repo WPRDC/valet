@@ -75,6 +75,25 @@ td {
         });
     }
 
+    function refresh_features() {
+        var zone = $("#id_zone").val();
+        var quarter = $("#id_quarter").val();
+
+        $.ajax({
+        url: 'ajax/get_features/',
+        data: {
+          'zone': zone,
+          'quarter': quarter
+        },
+        dataType: 'json',
+        success: function (data) {
+            $("#rate").html(data.rate)
+            $("#spaces").html(data.spaces);
+            $("#leases").html(data.leases);
+            }
+        });
+    }
+
     function refresh_dates() {
         var quarter = $("#id_quarter").val();
 
@@ -112,12 +131,9 @@ td {
     }
 
     $("#id_quarter").change(refresh_dates);
-    $("#id_resource").change(refresh_field_options);
+    $("#id_zone").change(refresh_features);
     $("#id_zone").change(regenerate_output);
     $("#id_quarter").change(regenerate_output);
-
-    $("#id_output_field").change(generate_formulas);
-    $("#id_output_field").val($('#id_output_field option').eq(1).val());
 
   </script>
 {% endblock %}
@@ -136,7 +152,7 @@ td {
         </div>
         <div class="six columns">
             <h5>Zone/lot features:</h5> 
-            <b>Rate:</b> ${{ zone_features.rate }}/hour, <b>Space count:</b> {{ zone_features.spaces }}, <b>Lease count:</b> {{ zone_features.leases }} 
+            <b>Rate:</b> $<span id="rate">{{ zone_features.rate }}</span>/hour, <b>Space count:</b> <span id="spaces">{{ zone_features.spaces }}</span>, <b>Lease count:</b> <span id="leases">{{ zone_features.leases }}</span>
             <P>
             <h5>Time range</h5>
             <b>Start date:</b> <span id="start_date">{{ start_date }}</span>, <b>End date:</b> <span id="end_date">{{ end_date }}</span>

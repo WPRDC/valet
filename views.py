@@ -481,6 +481,30 @@ def load_and_cache_utilization(zone,start_date,end_date,start_hour,end_hour):
     ut, rev, transaction_count = calculate_utilization(zone,start_date,end_date,start_hour,end_hour)
     return {'total_payments': rev, 'transaction_count': transaction_count, 'utilization': ut}
 
+def get_features(request):
+    """
+    Look up the space count, lease count, and rate for this combination
+    of zone and quarter (eventually extend this to date range) and return them.
+    """
+    zone = request.GET.get('zone', None)
+    quarter = request.GET.get('quarter', None)
+    # Convert quarter to start_date and end_date
+    print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
+
+    start_date, end_date = quarter_to_dates(quarter)
+  
+    space_count, hourly_rate = get_space_count_and_rate(zone,start_date,end_date)
+    leases = get_lease_count(zone,start_date,end_date)
+
+    data = {
+        'spaces': space_count,
+        'leases': leases,
+        'rate': hourly_rate
+    }
+
+    pprint(data)
+    return JsonResponse(data)
+
 def get_dates(request):
     """
     Look up the start_date and end_date for this combination
