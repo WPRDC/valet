@@ -12,11 +12,12 @@ from collections import defaultdict
 
 from .models import SpaceCount, LeaseCount, LastCached
 from .util import parking_days_in_range, format_as_table, format_row, format_date
+from .proto_get_revenue import get_revenue_and_count
 
 
 hour_ranges = {'8am-10am': {'start_hour': 8, 'end_hour': 10},
                '10am-2pm': {'start_hour': 10, 'end_hour': 14},
-               '2pm-5pm': {'start_hour': 14, 'end_hour': 17} }
+               '2pm-6pm': {'start_hour': 14, 'end_hour': 18} }
 # [ ] Add final hour range/ranges for the Southside (maybe picking only particular days, so a different query might be needed).
 
 def get_zones():
