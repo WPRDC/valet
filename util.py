@@ -76,7 +76,7 @@ def format_date(d):
 
 def format_row(hour_range,total_payments,transaction_count,utilization):
     revenue = "${:,.2f}".format(total_payments)
-    row = {'hour_range': hour_range, 'total_payments': "{}".format(revenue), 'transaction_count': "{:,}".format(transaction_count), 'utilization': "{:.3f}".format(utilization)}
+    row = {'hour_range': hour_range, 'total_payments': "{}".format(revenue), 'transaction_count': "{:,}".format(transaction_count), 'utilization': "{:.1f}%".format(100*utilization)}
     return row
 
 def format_as_table(results):
@@ -103,7 +103,7 @@ def format_as_table(results):
     \t<thead>
     \t<tr>
     \t\t<th>Hour range</th>
-    \t\t<th>Total payments</th>
+    \t\t<th>Revenue</th>
     \t\t<th>Transactions</th>
     \t\t<th>Utilization</th>
     \t</tr>
