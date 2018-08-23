@@ -104,6 +104,7 @@ td {
         },
         dataType: 'json',
         success: function (data) {
+            $("#date_range_quarter").html(data.quarter)
             $("#start_date").html(data.start_date)
             $("#end_date").html(data.end_date);
             }
@@ -154,7 +155,7 @@ td {
             <h5>Zone/lot features:</h5> 
             <b>Rate:</b> $<span id="rate">{{ zone_features.rate }}</span>/hour, <b>Space count:</b> <span id="spaces">{{ zone_features.spaces }}</span>, <b>Lease count:</b> <span id="leases">{{ zone_features.leases }}</span>
             <P>
-            <h5>Time range</h5>
+            <h5>Date range for <span id="date_range_quarter">{{ display_quarter }}</span></h5>
             <b>Start date:</b> <span id="start_date">{{ start_date }}</span>, <b>End date:</b> <span id="end_date">{{ end_date }}</span>
         </div>
     </div>

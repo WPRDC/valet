@@ -520,7 +520,8 @@ def get_dates(request):
   
     data = {
         'start_date': format_date(start_date),
-        'end_date': format_date(end_date)
+        'end_date': format_date(end_date),
+        'quarter': quarter
     }
 
     pprint(data)
