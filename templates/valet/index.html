@@ -126,7 +126,7 @@ td {
         success: function (data) {
             $("#output").html(data.output_table)
             $("#output_zone").html(data.display_zone)
-            $("#output_quarter").html(data.display_quarter)
+            $("#date_range_quarter").html(data.display_quarter)
             }
         });
     }
@@ -144,19 +144,12 @@ td {
     <h3>Pittsburgh Parking Reports</h3>
     <h5>Lots and Metered Parking</h5>
     <br>
-    <div class="row">
+    <div class="row" style="column-rule-style: dashed;">
          <div class="six columns">
              <form method="post">
                 {% csrf_token %}
                 {{ zone_picker }}
             </form>
-        </div>
-        <div class="six columns">
-            <h5>Zone/lot features:</h5> 
-            <b>Rate:</b> $<span id="rate">{{ zone_features.rate }}</span>/hour, <b>Space count:</b> <span id="spaces">{{ zone_features.spaces }}</span>, <b>Lease count:</b> <span id="leases">{{ zone_features.leases }}</span>
-            <P>
-            <h5>Date range for <span id="date_range_quarter">{{ display_quarter }}</span></h5>
-            <b>Start date:</b> <span id="start_date">{{ start_date }}</span>, <b>End date:</b> <span id="end_date">{{ end_date }}</span>
         </div>
     </div>
     <P>
@@ -167,11 +160,21 @@ td {
                 {{ output_table }}
                 {% endautoescape %}
             </div>
-            <font size="4rem" style="font-weight: 200">Selected zone = <span id="output_zone">{{ display_zone }}</span><br>
-                Selected quarter = <span id="output_quarter">{{ display_quarter }}</span></font>
         </div>
     </div>
 
+    <div class="row">
+        <div class="six columns">
+            <h5>Zone/lot features for selected lot</h5>
+            <b>Selected lot:</b> <span id="output_zone">{{ display_zone }}</span><br> 
+            <b>Rate:</b> $<span id="rate">{{ zone_features.rate }}</span>/hour, <b>Space count:</b> <span id="spaces">{{ zone_features.spaces }}</span>, <b>Lease count:</b> <span id="leases">{{ zone_features.leases }}</span>
+        </div>
+        <div class="six columns">
+            <h5>Date range for selected quarter</h5>
+            <b>Selected quarter:</b> <span id="date_range_quarter">{{ display_quarter }}</span><br>
+            <b>Start date:</b> <span id="start_date">{{ start_date }}</span>, <b>End date:</b> <span id="end_date">{{ end_date }}</span>
+        </div>
+    </div>
 </div>
 {% endblock content %}
 {% block footer %}
