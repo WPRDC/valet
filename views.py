@@ -12,7 +12,7 @@ from collections import defaultdict, OrderedDict
 
 from .models import SpaceCount, LeaseCount, LastCached
 from .util import parking_days_in_range, format_as_table, format_row, format_date
-from .proto_get_revenue import get_revenue_and_count
+from .proto_get_revenue import get_revenue_and_count, set_table, clear_table
 
 
 hour_ranges = OrderedDict([('8am-10am', {'start_hour': 8, 'end_hour': 10}),
@@ -540,6 +540,7 @@ def get_results(request):
     start_date, end_date = quarter_to_dates(quarter)
   
     r_list = []
+    set_table()
     for key in hour_ranges:
         start_hour = hour_ranges[key]['start_hour']
         end_hour = hour_ranges[key]['end_hour']
@@ -548,6 +549,7 @@ def get_results(request):
         #r_list.append(results_dict)
         row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'])
         r_list.append( row )
+    clear_table()
 
     #result = any(p['id'] == dataset_id for p in rlist)
     #match = None
@@ -589,6 +591,7 @@ def index(request):
             'leases': leases}
     
     results = []
+    set_table()
     for key in hour_ranges:
         start_hour = hour_ranges[key]['start_hour']
         end_hour = hour_ranges[key]['end_hour']
@@ -597,6 +600,7 @@ def index(request):
         #results.append( {'hour_range': key, 'total_payments': revenue, 'transaction_count': transaction_count, 'utilization': ut} )
         row = format_row(key, revenue, transaction_count, ut)
         results.append( row )
+    clear_table()
     pprint(results)
 
     class SpaceTimeForm(forms.Form):
