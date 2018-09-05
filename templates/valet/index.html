@@ -24,7 +24,10 @@ td {
 
 {% block javascript %}
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-  <script>
+  <script type="text/javascript">
+    function hide_results(bool) {
+        document.getElementById('results').style.display=(bool?'none':'block');
+    }
 
     function replace_selector_with_options(selector,options) {
         var $el = $(selector);
@@ -115,7 +118,7 @@ td {
     function regenerate_output() {
         var zone = $("#id_zone").val();
         var quarter = $("#id_quarter").val();
-
+        hide_results(true);
         $.ajax({
             url: 'ajax/get_results/',
         data: {
@@ -124,6 +127,7 @@ td {
         },
         dataType: 'json',
         success: function (data) {
+            hide_results(false)
             $("#output").html(data.output_table)
             $("#output_zone").html(data.display_zone)
             $("#date_range_quarter").html(data.display_quarter)
@@ -135,7 +139,7 @@ td {
     $("#id_zone").change(refresh_features);
     $("#id_zone").change(regenerate_output);
     $("#id_quarter").change(regenerate_output);
-
+    hide_results(false);
   </script>
 {% endblock %}
 
@@ -153,26 +157,28 @@ td {
         </div>
     </div>
     <P>
-    <div class="row">
-        <div class="twelve columns">
-            <div id="output">
-                {% autoescape off %}
-                {{ output_table }}
-                {% endautoescape %}
+    <div id="results">
+        <div class="row">
+            <div class="twelve columns">
+                <div id="output">
+                    {% autoescape off %}
+                    {{ output_table }}
+                    {% endautoescape %}
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="row">
-        <div class="six columns">
-            <h5>Zone/lot features for selected lot</h5>
-            <b>Selected lot:</b> <span id="output_zone">{{ display_zone }}</span><br> 
-            <b>Rate:</b> $<span id="rate">{{ zone_features.rate }}</span>/hour, <b>Space count:</b> <span id="spaces">{{ zone_features.spaces }}</span>, <b>Lease count:</b> <span id="leases">{{ zone_features.leases }}</span>
-        </div>
-        <div class="six columns">
-            <h5>Date range for selected quarter</h5>
-            <b>Selected quarter:</b> <span id="date_range_quarter">{{ display_quarter }}</span><br>
-            <b>Start date:</b> <span id="start_date">{{ start_date }}</span>, <b>End date:</b> <span id="end_date">{{ end_date }}</span>
+        <div class="row">
+            <div class="six columns">
+                <h5>Zone/lot features for selected lot</h5>
+                <b>Selected lot:</b> <span id="output_zone">{{ display_zone }}</span><br> 
+                <b>Rate:</b> $<span id="rate">{{ zone_features.rate }}</span>/hour, <b>Space count:</b> <span id="spaces">{{ zone_features.spaces }}</span>, <b>Lease count:</b> <span id="leases">{{ zone_features.leases }}</span>
+            </div>
+            <div class="six columns">
+                <h5>Date range for selected quarter</h5>
+                <b>Selected quarter:</b> <span id="date_range_quarter">{{ display_quarter }}</span><br>
+                <b>Start date:</b> <span id="start_date">{{ start_date }}</span>, <b>End date:</b> <span id="end_date">{{ end_date }}</span>
+            </div>
         </div>
     </div>
 </div>
