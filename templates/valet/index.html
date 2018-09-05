@@ -38,46 +38,6 @@ td {
                });
     }
 
-    function refresh_field_options() {
-        var resource = $("#id_resource").val();
-
-        $.ajax({
-        url: 'ajax/get_fields/',
-        data: {
-          'resource': resource
-        },
-        dataType: 'json',
-        success: function (data) {
-            replace_selector_with_options("#id_input_field",data.field_choices)
-            replace_selector_with_options("#id_output_field",data.field_choices)
-            $("#id_output_field").val($('#id_output_field option').eq(1).val());
-            }
-        });
-
-    }
-
-    function generate_formulas() {
-        var resource = $("#id_resource").val();
-        var input_field = $("#id_input_field").val();
-        var output_field = $("#id_output_field").val();
-        var spreadsheet_column = $("#id_input_column_index").val();
-
-
-        $.ajax({
-        url: 'ajax/get_formulas/',
-        data: {
-          'resource': resource,
-          'input_field': input_field,
-          'output_field': output_field,
-          'spreadsheet_column': spreadsheet_column
-        },
-        dataType: 'json',
-        success: function (data) {
-            $("#excel_formula").val(data.excel_formula)
-            }
-        });
-    }
-
     function refresh_features() {
         var zone = $("#id_zone").val();
         var quarter = $("#id_quarter").val();
