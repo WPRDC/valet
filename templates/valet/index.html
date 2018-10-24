@@ -49,7 +49,8 @@ td {
         data: {
           'zone': zone,
           'month': month,
-          'year': year
+          'year': year,
+          'search_by': search_by
         },
         dataType: 'json',
         success: function (data) {
@@ -69,7 +70,8 @@ td {
         url: 'ajax/get_dates/',
         data: {
           'month': month,
-          'year': year
+          'year': year,
+          'search_by': search_by
         },
         dataType: 'json',
         success: function (data) {
@@ -94,7 +96,8 @@ td {
         data: {
             'zone': zone,
             'month': month,
-            'year': year
+            'year': year,
+            'search_by': search_by
         },
         dataType: 'json',
         success: function (data) {
