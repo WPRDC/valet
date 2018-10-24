@@ -87,6 +87,24 @@ def get_zones():
 def convert_string_to_date(s):
     return datetime.strptime(s, "%Y-%m-%d").date()
 
+def beginning_of_month(d):
+    """Takes a date (or datetime) and returns the first date before
+    that that corresponds to the beginning of the month."""
+    now = datetime.now()
+    if d == None:
+        d = now
+    if type(d) == type(now):
+        d = d.date()
+    return d.replace(day=1)
+
+def end_of_month(d):
+    if d.month == 12:
+        d.replace(year = d.year + 1, month = 1)
+    else:
+        d.replace(month = d.month + 1)
+    start_of_next_month = beginning_of_month(d)
+    return start_of_next_month - timedelta(days = 1)
+
 def is_beginning_of_the_quarter(dt):
    return dt.day == 1 and dt.month in [1,4,7,10]
 
