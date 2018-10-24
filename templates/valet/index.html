@@ -40,13 +40,16 @@ td {
 
     function refresh_features() {
         var zone = $("#id_zone").val();
-        var quarter = $("#id_quarter").val();
+        var month = $("#id_month").val();
+        var year = $("#id_year").val();
+        var search_by = ("id_search_by").val();
 
         $.ajax({
         url: 'ajax/get_features/',
         data: {
           'zone': zone,
-          'quarter': quarter
+          'month': month,
+          'year': year
         },
         dataType: 'json',
         success: function (data) {
@@ -58,16 +61,20 @@ td {
     }
 
     function refresh_dates() {
-        var quarter = $("#id_quarter").val();
+        var month = $("#id_month").val();
+        var year = $("#id_year").val();
+        var search_by = $("id_search_by").val();
 
         $.ajax({
         url: 'ajax/get_dates/',
         data: {
-          'quarter': quarter
+          'month': month,
+          'year': year
         },
         dataType: 'json',
         success: function (data) {
-            $("#date_range_quarter").html(data.quarter)
+            $("#selected_month").html(data.month)
+            $("#selected_year").html(data.year)
             $("#start_date").html(data.start_date)
             $("#end_date").html(data.end_date);
             }
@@ -77,28 +84,35 @@ td {
 
     function regenerate_output() {
         var zone = $("#id_zone").val();
-        var quarter = $("#id_quarter").val();
+        var month = $("#id_month").val();
+        var year = $("#id_year").val();
+        var search_by = $("id_search_by").val();
+
         hide_results(true);
         $.ajax({
             url: 'ajax/get_results/',
         data: {
             'zone': zone,
-            'quarter': quarter
+            'month': month,
+            'year': year
         },
         dataType: 'json',
         success: function (data) {
             hide_results(false)
             $("#output").html(data.output_table)
             $("#output_zone").html(data.display_zone)
-            $("#date_range_quarter").html(data.display_quarter)
+            $("#selected_year").html(data.year)
+            $("#selected_month").html(data.month)
             }
         });
     }
 
-    $("#id_quarter").change(refresh_dates);
+    $("#id_month").change(refresh_dates);
+    $("#id_year").change(refresh_dates);
     $("#id_zone").change(refresh_features);
     $("#id_zone").change(regenerate_output);
-    $("#id_quarter").change(regenerate_output);
+    $("#id_month").change(regenerate_output);
+    $("#id_year").change(regenerate_output);
     hide_results(false);
   </script>
 {% endblock %}
@@ -135,8 +149,8 @@ td {
                 <b>Rate:</b> $<span id="rate">{{ zone_features.rate }}</span>/hour, <b>Space count:</b> <span id="spaces">{{ zone_features.spaces }}</span>, <b>Lease count:</b> <span id="leases">{{ zone_features.leases }}</span>
             </div>
             <div class="six columns">
-                <h5>Date range for selected quarter</h5>
-                <b>Selected quarter:</b> <span id="date_range_quarter">{{ display_quarter }}</span><br>
+                <h5>Date range for selected time range</h5>
+                <b>Selected month and year:</b> <span id="selected_month">{{ display_month }}</span>/<span id="selected_year">{{ display_year }}</span><br>
                 <b>Start date:</b> <span id="start_date">{{ start_date }}</span>, <b>End date:</b> <span id="end_date">{{ end_date }}</span>
             </div>
         </div>
