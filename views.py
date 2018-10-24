@@ -711,7 +711,7 @@ def index(request):
     #            'zone_picker': SpaceTimeForm().as_p()}
     if search_by == 'quarter':
         st_form = QuarterSpaceTimeForm()
-    else:
+    elif search_by == 'month':
         st_form = MonthSpaceTimeForm()
     #st_form.fields['zone'].initial = ["401 - Downtown 1"]
 
@@ -732,7 +732,6 @@ def index(request):
         context['display_month'] = initial_month
         context['display_year'] = initial_year
 
-    pprint(context)
     return render(request, 'valet/index.html', context)
 
     #return HttpResponse(template.render(context, request))
