@@ -14,6 +14,7 @@ from .models import SpaceCount, LeaseCount, LastCached
 from .util import parking_days_in_range, format_as_table, format_row, format_date
 from .proto_get_revenue import get_revenue_and_count, set_table, clear_table
 
+ref_time = 'purchase_time'
 
 hour_ranges = OrderedDict([('8am-10am', {'start_hour': 8, 'end_hour': 10}),
                ('10am-2pm', {'start_hour': 10, 'end_hour': 14}),
@@ -475,14 +476,15 @@ def get_lease_count(zone,start_date,end_date):
 def get_hourly_rate(zone,start_date,end_date,start_hour,end_hour):
     # Some corrections will be needed, e.g., for zones that come up as "MULTIRATE".
 
-    # start_hour and end_hour are being passed since there are a few oddball 
+    # start_hour and end_hour are being passed since there are a few oddball
     # cases where the rate has been dependent on the time of day.
     space_count, hourly_rate = get_space_count_and_rate(zone,start_date,end_date)
     return hourly_rate
 
 def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
     """Utilization = (Revenue from parking purchases) / { ([# of spots] - 0.85*[# of leases]) * (rate per hour) * (the number of days in the time span where parking is not free) * (duration of slot in hours) }"""
-    revenue, transaction_count = get_revenue_and_count(zone,start_date,end_date,start_hour,end_hour)
+
+    revenue, transaction_count = get_revenue_and_count(ref_time,zone,start_date,end_date,start_hour,end_hour)
     lease_count = get_lease_count(zone,start_date,end_date)
     if lease_count is None:
         lease_count = 0
@@ -558,7 +560,7 @@ def get_results(request):
     start_date, end_date = quarter_to_dates(quarter)
   
     r_list = []
-    set_table()
+    set_table(ref_time)
     for key in hour_ranges:
         start_hour = hour_ranges[key]['start_hour']
         end_hour = hour_ranges[key]['end_hour']
@@ -567,7 +569,7 @@ def get_results(request):
         #r_list.append(results_dict)
         row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'])
         r_list.append( row )
-    clear_table()
+    clear_table(ref_time)
 
     #result = any(p['id'] == dataset_id for p in rlist)
     #match = None
@@ -594,22 +596,57 @@ def index(request):
     all_zones = get_zones()
     zone_choices = convert_to_choices(all_zones)
     initial_zone = all_zones[0]
-    initial_quarter_choices = get_quarter_choices() # These should eventually be dependent on the initially chosen zone.
-    initial_quarter = initial_quarter_choices[0][0]
+    search_choices = convert_to_choices(['month','quarter'])
 
-    d = datetime.now().date() - timedelta(days = 365) 
+    d = datetime.now().date() - timedelta(days = 365)
+    search_by = 'month'
+    if search_by == 'quarter':
+        initial_quarter_choices = get_quarter_choices() # These should eventually be dependent on the initially chosen zone.
+        initial_quarter = initial_quarter_choices[0][0]
+        start_date = beginning_of_quarter(d)
+        end_date = end_of_quarter(d)
 
-    start_date = beginning_of_quarter(d)
-    end_date = end_of_quarter(d)
+        class QuarterSpaceTimeForm(forms.Form):
+            zone = forms.ChoiceField(choices=zone_choices)
+            quarter = forms.ChoiceField(choices=initial_quarter_choices)
+            search_by = forms.ChoiceField(choices=search_choices)
+            #input_field = forms.ChoiceField(choices=first_field_choices, help_text="(what you have in your spreadsheet)")
+            #input_column_index = forms.CharField(initial='B',
+            #    label="Input column",
+            #    help_text='(the column in your spreadsheet where the values you want to convert can be found [e.g., "B"])',
+            #    widget=forms.TextInput(attrs={'size':2}))
+            #output_field = forms.ChoiceField(choices=first_field_choices, help_text="(what you want to convert your spreadsheet column to)")
+    elif search_by == 'month':
+        now = datetime.now()
+        first_year = 2016
+        years = range(first_year,now.year+1)
+        initial_year_choices = convert_to_choices(years)
+        initial_month_choices = convert_to_choices(range(1,13))
+
+        initial_month = d.month
+        initial_year = d.year
+        start_date = beginning_of_month(d)
+        end_date = end_of_month(d)
+        print("Start of month for date = {} is {} and end of month is {}".format(d,start_date,end_date))
+
+        class MonthSpaceTimeForm(forms.Form):
+            zone = forms.ChoiceField(choices=zone_choices) #, initial = "401 - Downtown 1")
+            year = forms.ChoiceField(choices=initial_year_choices)
+            month = forms.ChoiceField(choices=initial_month_choices)
+            search_by = forms.ChoiceField(choices=search_choices)
+    else:
+        raise ValueError("This view is not provisioned to handle a search_by value of {}.".format(search_by))
+
+
     spaces, rate = get_space_count_and_rate(initial_zone,start_date,end_date)
     leases = get_lease_count(initial_zone,start_date,end_date)
 
     zone_features = {'spaces': spaces,
             'rate': rate,
             'leases': leases}
-    
+
     results = []
-    set_table()
+    set_table(ref_time)
     for key in hour_ranges:
         start_hour = hour_ranges[key]['start_hour']
         end_hour = hour_ranges[key]['end_hour']
@@ -618,7 +655,7 @@ def index(request):
         #results.append( {'hour_range': key, 'total_payments': revenue, 'transaction_count': transaction_count, 'utilization': ut} )
         row = format_row(key, revenue, transaction_count, ut)
         results.append( row )
-    clear_table()
+    clear_table(ref_time)
     pprint(results)
 
     class SpaceTimeForm(forms.Form):
