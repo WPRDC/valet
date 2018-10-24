@@ -718,6 +718,7 @@ def index(request):
     output_table = format_as_table(results)
 
     context = {'zone_picker': st_form.as_p(),
+            'form': st_form,
             'start_date': format_date(start_date),
             'end_date': format_date(end_date),
             'display_zone': initial_zone,

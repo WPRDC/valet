@@ -126,10 +126,34 @@ td {
     <h5>Lots and Metered Parking</h5>
     <br>
     <div class="row" style="column-rule-style: dashed;">
-         <div class="six columns">
+         <div class="twelve columns">
              <form method="post">
                 {% csrf_token %}
-                {{ zone_picker }}
+
+                {{ form.non_field_errors }}
+                <div class="fieldWrapper">
+                    <div class = "six columns">
+                        <span>
+                            {{ form.zone.errors }}
+                            <b>Zone:</b>
+                            {{ form.zone }}
+                        </span>
+                    </div>
+                    <div class = "six columns">
+                        <span>
+                            {{ form.year.errors }}
+                            <b>Year:</b>
+                            {{ form.year }}
+                        </span>
+                        &nbsp;
+                        <span>
+                            {{ form.month.errors }}
+                            <b>Month:</b>
+                            {{ form.month }}
+                        </span>
+                    </div>
+                </div>
+
             </form>
         </div>
     </div>
