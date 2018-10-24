@@ -100,11 +100,23 @@ def beginning_of_month(d):
 
 def end_of_month(d):
     if d.month == 12:
-        d.replace(year = d.year + 1, month = 1)
+        d = d.replace(year = d.year + 1, month = 1)
     else:
-        d.replace(month = d.month + 1)
+        d = d.replace(month = d.month + 1)
     start_of_next_month = beginning_of_month(d)
     return start_of_next_month - timedelta(days = 1)
+
+def add_month_to_date(d):
+    if d.month == 12:
+        d = d.replace(year = d.year + 1, month = 1)
+    else:
+        d = d.replace(month = d.month + 1)
+    return d
+
+def dates_for_month(year,month):
+    start_date = beginning_of_month(date(year,month,1))
+    end_date = beginning_of_month(add_month_to_date(start_date))
+    return start_date, end_date
 
 def is_beginning_of_the_quarter(dt):
    return dt.day == 1 and dt.month in [1,4,7,10]
@@ -522,8 +534,7 @@ def get_features(request):
         # Convert month/year to start_date and end_date
         print("Retrieved zone = '{}' and month/year = '{}/{}'".format(zone,month,year))
 
-        start_date = beginning_of_month(date(year,month,1))
-        end_date = end_of_month(start_date)
+        start_date, end_date = dates_for_month(year,month)
 
     space_count, hourly_rate = get_space_count_and_rate(zone,start_date,end_date)
     leases = get_lease_count(zone,start_date,end_date)
@@ -562,8 +573,7 @@ def get_dates(request):
         # Convert month/year to start_date and end_date
         print("Retrieved zone = '{}' and month/year = '{}/{}'".format(zone,month,year))
 
-        start_date = beginning_of_month(date(year,month,1))
-        end_date = end_of_month(start_date)
+        start_date, end_date = dates_for_month(year,month)
 
         data = {
             'start_date': format_date(start_date),
@@ -592,8 +602,7 @@ def get_results(request):
     elif search_by == 'month':
         month = int(request.GET.get('month', None))
         year = int(request.GET.get('year', None))
-        start_date = beginning_of_month(date(year,month,1))
-        end_date = end_of_month(start_date)
+        start_date, end_date = dates_for_month(year,month)
 
     r_list = []
     set_table(ref_time)
@@ -665,8 +674,7 @@ def index(request):
 
         initial_month = d.month
         initial_year = d.year
-        start_date = beginning_of_month(d)
-        end_date = end_of_month(d)
+        start_date, end_date = dates_for_month(initial_year,initial_month)
         print("Start of month for date = {} is {} and end of month is {}".format(d,start_date,end_date))
 
         class MonthSpaceTimeForm(forms.Form):
