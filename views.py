@@ -270,6 +270,9 @@ def get_all_records(site,resource_id,API_key=None,chunk_size=5000):
     k = 0
     offset = 0 # offset is almost k*chunk_size (but not quite)
     row_count = get_number_of_rows(site,resource_id,API_key)
+    if row_count is None:
+        print("Some error was encountered when trying to obtain the row count for resource {} from {}".format(resource_id,site))
+        success = False
     if row_count == 0: # or if the datastore is not active
        print("No data found in the datastore.")
        success = False
