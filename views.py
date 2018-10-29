@@ -88,6 +88,11 @@ def get_zones():
 def convert_string_to_date(s):
     return datetime.strptime(s, "%Y-%m-%d").date()
 
+def convert_date_to_datetime(d):
+    """Takes a date and returns the corresponding datetime,
+    with midnight as the time. The result is time-zone-naive."""
+    return datetime(year=d.year, month=d.month, day=d.day)
+
 def beginning_of_month(d):
     """Takes a date (or datetime) and returns the first date before
     that that corresponds to the beginning of the month."""
@@ -117,6 +122,12 @@ def dates_for_month(year,month):
     start_date = beginning_of_month(date(year,month,1))
     end_date = beginning_of_month(add_month_to_date(start_date))
     return start_date, end_date
+
+def datetimes_for_month(year,month):
+    start_date, end_date = dates_for_month(year,month)
+    start_dt = convert_date_to_datetime(start_date)
+    end_dt = convert_date_to_datetime(end_date)
+    return start_dt, end_dt, start_date, end_date
 
 def is_beginning_of_the_quarter(dt):
    return dt.day == 1 and dt.month in [1,4,7,10]
@@ -152,7 +163,7 @@ def date_to_quarter(d):
     quarter_number = int((d.month-1)/3) + 1
     return (year, quarter_number)
 
-def quarter_to_dates(q):
+def quarter_to_datetimes(q):
     if re.match(' Q',q) is not None:
         raise RuntimeError("{} is not a properly formed quarter (which should be of the form '2016 Q2').".format(q))
     yr, q_digit = q.split(' Q')
@@ -160,8 +171,10 @@ def quarter_to_dates(q):
     quarter_number = int(q_digit)
     month = (quarter_number-1)*3 + 1
     start_date = date(year,month,1)
-    end_date = end_of_quarter(start_date)
-    return start_date, end_date
+    end_date = end_of_quarter(start_date) + timedelta(days=1)
+    start_dt = convert_date_to_datetime(start_date)
+    end_dt = convert_date_to_datetime(end_date)
+    return start_dt, end_dt, start_date, end_date
 
 def verify_quarter(d):
     year, quarter = date_to_quarter(d)
@@ -529,7 +542,7 @@ def get_features(request):
         # Convert quarter to start_date and end_date
         print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
 
-        start_date, end_date = quarter_to_dates(quarter)
+        start_dt, end_dt, start_date, end_date = quarter_to_datetimes(quarter)
 
     elif search_by == 'month':
         month = int(request.GET.get('month', None))
@@ -537,7 +550,7 @@ def get_features(request):
         # Convert month/year to start_date and end_date
         print("Retrieved zone = '{}' and month/year = '{}/{}'".format(zone,month,year))
 
-        start_date, end_date = dates_for_month(year,month)
+        start_dt, end_dt, start_date, end_date = datetimes_for_month(year,month)
 
     space_count, hourly_rate = get_space_count_and_rate(zone,start_date,end_date)
     leases = get_lease_count(zone,start_date,end_date)
@@ -556,6 +569,10 @@ def get_dates(request):
     Look up the start_date and end_date for this combination
     of zone and quarter/month (eventually extend this to date range) and return them.
     """
+    # Note that end_date is the last date (NON-INCLUSIVE) of a date range
+    # That is, dates = [start_date, end_date)
+    # The end_date for October 2018 is 2018-11-01.
+
     zone = request.GET.get('zone', None)
     search_by = request.GET.get('search_by', 'month')
     if search_by == 'quarter':
@@ -563,11 +580,11 @@ def get_dates(request):
         # Convert quarter to start_date and end_date
         print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
 
-        start_date, end_date = quarter_to_dates(quarter)
+        start_dt, end_dt, start_date, end_date = quarter_to_datetimes(quarter)
 
         data = {
-            'start_date': format_date(start_date),
-            'end_date': format_date(end_date),
+            'start_dt': start_dt,
+            'end_dt': end_dt,
             'quarter': quarter
         }
     elif search_by == 'month':
@@ -576,11 +593,11 @@ def get_dates(request):
         # Convert month/year to start_date and end_date
         print("Retrieved zone = '{}' and month/year = '{}/{}'".format(zone,month,year))
 
-        start_date, end_date = dates_for_month(year,month)
+        start_dt, end_dt, start_date, end_date = datetimes_for_month(year,month)
 
         data = {
-            'start_date': format_date(start_date),
-            'end_date': format_date(end_date),
+            'start_dt': start_dt,
+            'end_dt': end_dt,
             'month': month,
             'year': year
         }
@@ -591,7 +608,7 @@ def get_dates(request):
 def get_results(request):
     """
     Look up the utilization, total payments, and transaction count for this combination
-    of zone and quarter (eventually extend this to date range) and return them.
+    of zone and quarter/month (eventually extend this to arbitrary date range) and return them.
     """
     zone = request.GET.get('zone', None)
     search_by = request.GET.get('search_by', 'month')
@@ -601,7 +618,7 @@ def get_results(request):
         # Convert quarter to start_date and end_date
         print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
 
-        start_date, end_date = quarter_to_dates(quarter)
+        start_dt, end_dt, start_date, end_date = quarter_to_datetimes(quarter)
     elif search_by == 'month':
         month = int(request.GET.get('month', None))
         year = int(request.GET.get('year', None))
@@ -655,8 +672,7 @@ def index(request):
     if search_by == 'quarter':
         initial_quarter_choices = get_quarter_choices() # These should eventually be dependent on the initially chosen zone.
         initial_quarter = initial_quarter_choices[0][0]
-        start_date = beginning_of_quarter(d)
-        end_date = end_of_quarter(d)
+        start_dt, end_dt, start_date, end_date = quarter_to_datetimes(initial_quarter)
 
         class QuarterSpaceTimeForm(forms.Form):
             zone = forms.ChoiceField(choices=zone_choices)
@@ -677,7 +693,8 @@ def index(request):
 
         initial_month = d.month
         initial_year = d.year
-        start_date, end_date = dates_for_month(initial_year,initial_month)
+        start_dt, end_dt, start_date, end_date = datetimes_for_month(initial_year,initial_month)
+
         print("Start of month for date = {} is {} and end of month is {}".format(d,start_date,end_date))
 
         class MonthSpaceTimeForm(forms.Form):
@@ -724,6 +741,8 @@ def index(request):
             'form': st_form,
             'start_date': format_date(start_date),
             'end_date': format_date(end_date),
+            'start_dt': start_dt,
+            'end_dt': end_dt,
             'display_zone': initial_zone,
             'zone_features': zone_features,
             'results': results,

@@ -77,8 +77,8 @@ td {
         success: function (data) {
             $("#selected_month").html(data.month)
             $("#selected_year").html(data.year)
-            $("#start_date").html(data.start_date)
-            $("#end_date").html(data.end_date);
+            $("#start_dt").html(data.start_dt)
+            $("#end_dt").html(data.end_dt);
             }
         });
 
@@ -178,7 +178,8 @@ td {
             <div class="six columns">
                 <h5>Date range for selected time range</h5>
                 <b>Selected month and year:</b> <span id="selected_month">{{ display_month }}</span>/<span id="selected_year">{{ display_year }}</span><br>
-                <b>Start date:</b> <span id="start_date">{{ start_date }}</span>, <b>End date:</b> <span id="end_date">{{ end_date }}</span>
+                <b>Start datetime:</b> <span id="start_dt">{{ start_dt }}</span><br>
+                <b>End datetime:</b> <span id="end_dt">{{ end_dt }}</span>
             </div>
         </div>
     </div>
