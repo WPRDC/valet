@@ -12,7 +12,8 @@ from collections import defaultdict, OrderedDict
 
 from .models import SpaceCount, LeaseCount, LastCached
 from .util import parking_days_in_range, format_as_table, format_row, format_date
-from .proto_get_revenue import get_revenue_and_count, set_table, clear_table
+from .query_util import get_revenue_and_count
+from .proto_get_revenue import set_table, clear_table
 
 ref_time = 'purchase_time'
 
