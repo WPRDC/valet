@@ -16,9 +16,13 @@ from .proto_get_revenue import get_revenue_and_count, set_table, clear_table
 
 ref_time = 'purchase_time'
 
-hour_ranges = OrderedDict([('8am-10am', {'start_hour': 8, 'end_hour': 10}),
+hour_ranges = OrderedDict([('midnight-8am', {'start_hour': 0, 'end_hour': 8}),
+               ('8am-10am', {'start_hour': 8, 'end_hour': 10}),
                ('10am-2pm', {'start_hour': 10, 'end_hour': 14}),
-               ('2pm-6pm', {'start_hour': 14, 'end_hour': 18})])
+               ('2pm-6pm', {'start_hour': 14, 'end_hour': 18}),
+               ('6pm-midnight', {'start_hour': 18, 'end_hour': 24}),
+               ('total', {'start_hour': 0, 'end_hour': 24}),
+               ])
 # [ ] Add final hour range/ranges for the Southside (maybe picking only particular days, so a different query might be needed).
 
 def get_zones():
