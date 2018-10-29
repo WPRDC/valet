@@ -529,8 +529,10 @@ def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
     utilization = revenue/effective_space_count/hourly_rate/non_free_days/slot_duration
     return utilization, revenue, transaction_count
 
-def load_and_cache_utilization(zone,start_date,end_date,start_hour,end_hour):
+def load_and_cache_utilization(zone,search_by,start_date,end_date,start_hour,end_hour):
     # Should this instead combine all the hour ranges?
+
+    # [ ] This function is not yet doing any caching.
     ut, rev, transaction_count = calculate_utilization(zone,start_date,end_date,start_hour,end_hour)
     return {'total_payments': rev, 'transaction_count': transaction_count, 'utilization': ut}
 
@@ -633,7 +635,7 @@ def get_results(request):
     for key in hour_ranges:
         start_hour = hour_ranges[key]['start_hour']
         end_hour = hour_ranges[key]['end_hour']
-        r_dict = load_and_cache_utilization(zone,start_date,end_date,start_hour,end_hour)
+        r_dict = load_and_cache_utilization(zone,search_by,start_date,end_date,start_hour,end_hour)
         #results_dict['hour_range'] = key
         #r_list.append(results_dict)
         row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'])
