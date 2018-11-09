@@ -10,6 +10,11 @@ def query_resource(site,query,API_key=None):
     # Note that this doesn't work for private datasets.
     # The relevant CKAN GitHub issue has been closed.
     # https://github.com/ckan/ckan/issues/1954
+
+    # In fact, if the dataset is private (the table is inaccessible),
+    # the datastore_search_sql function throws a gibberishy, non-helpful error:
+    # TypeError: __str__ returned non-string (type dict)
+
     ckan = ckanapi.RemoteCKAN(site, apikey=API_key)
     response = ckan.action.datastore_search_sql(sql=query)
     # A typical response is a dictionary like this
@@ -41,7 +46,9 @@ def get_resource_id(ref_time):
     if ref_time == 'hybrid':
         from .credentials import transactions_resource_id as resource_id
     elif ref_time == 'purchase_time':
-        from .credentials import split_pdl_transactions_resource_id as resource_id
+        #from .credentials import split_pdl_transactions_resource_id as resource_id # Maybe not quite right.
+        #from .credentials import debug_resource_id as resource_id
+        from .credentials import office_debug_resource_id as resource_id
     else:
         raise ValueError("ref_time must specify the reference time to determine the correct resource ID.")
     return resource_id
