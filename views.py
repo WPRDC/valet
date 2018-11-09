@@ -14,10 +14,15 @@ from .models import SpaceCount, LeaseCount, LastCached
 from .util import parking_days_in_range, format_as_table, format_row, format_date
 from .proto_get_revenue import get_revenue_and_count, set_table, clear_table
 
+ref_time = 'purchase_time'
 
-hour_ranges = OrderedDict([('8am-10am', {'start_hour': 8, 'end_hour': 10}),
+hour_ranges = OrderedDict([('midnight-8am', {'start_hour': 0, 'end_hour': 8}),
+               ('8am-10am', {'start_hour': 8, 'end_hour': 10}),
                ('10am-2pm', {'start_hour': 10, 'end_hour': 14}),
-               ('2pm-6pm', {'start_hour': 14, 'end_hour': 18})])
+               ('2pm-6pm', {'start_hour': 14, 'end_hour': 18}),
+               ('6pm-midnight', {'start_hour': 18, 'end_hour': 24}),
+               ('total', {'start_hour': 0, 'end_hour': 24}),
+               ])
 # [ ] Add final hour range/ranges for the Southside (maybe picking only particular days, so a different query might be needed).
 
 def get_zones():
@@ -87,6 +92,47 @@ def get_zones():
 def convert_string_to_date(s):
     return datetime.strptime(s, "%Y-%m-%d").date()
 
+def convert_date_to_datetime(d):
+    """Takes a date and returns the corresponding datetime,
+    with midnight as the time. The result is time-zone-naive."""
+    return datetime(year=d.year, month=d.month, day=d.day)
+
+def beginning_of_month(d):
+    """Takes a date (or datetime) and returns the first date before
+    that that corresponds to the beginning of the month."""
+    now = datetime.now()
+    if d == None:
+        d = now
+    if type(d) == type(now):
+        d = d.date()
+    return d.replace(day=1)
+
+def end_of_month(d):
+    if d.month == 12:
+        d = d.replace(year = d.year + 1, month = 1)
+    else:
+        d = d.replace(month = d.month + 1)
+    start_of_next_month = beginning_of_month(d)
+    return start_of_next_month - timedelta(days = 1)
+
+def add_month_to_date(d):
+    if d.month == 12:
+        d = d.replace(year = d.year + 1, month = 1)
+    else:
+        d = d.replace(month = d.month + 1)
+    return d
+
+def dates_for_month(year,month):
+    start_date = beginning_of_month(date(year,month,1))
+    end_date = beginning_of_month(add_month_to_date(start_date))
+    return start_date, end_date
+
+def datetimes_for_month(year,month):
+    start_date, end_date = dates_for_month(year,month)
+    start_dt = convert_date_to_datetime(start_date)
+    end_dt = convert_date_to_datetime(end_date)
+    return start_dt, end_dt, start_date, end_date
+
 def is_beginning_of_the_quarter(dt):
    return dt.day == 1 and dt.month in [1,4,7,10]
 
@@ -121,7 +167,7 @@ def date_to_quarter(d):
     quarter_number = int((d.month-1)/3) + 1
     return (year, quarter_number)
 
-def quarter_to_dates(q):
+def quarter_to_datetimes(q):
     if re.match(' Q',q) is not None:
         raise RuntimeError("{} is not a properly formed quarter (which should be of the form '2016 Q2').".format(q))
     yr, q_digit = q.split(' Q')
@@ -129,8 +175,10 @@ def quarter_to_dates(q):
     quarter_number = int(q_digit)
     month = (quarter_number-1)*3 + 1
     start_date = date(year,month,1)
-    end_date = end_of_quarter(start_date)
-    return start_date, end_date
+    end_date = end_of_quarter(start_date) + timedelta(days=1)
+    start_dt = convert_date_to_datetime(start_date)
+    end_dt = convert_date_to_datetime(end_date)
+    return start_dt, end_dt, start_date, end_date
 
 def verify_quarter(d):
     year, quarter = date_to_quarter(d)
@@ -239,6 +287,9 @@ def get_all_records(site,resource_id,API_key=None,chunk_size=5000):
     k = 0
     offset = 0 # offset is almost k*chunk_size (but not quite)
     row_count = get_number_of_rows(site,resource_id,API_key)
+    if row_count is None:
+        print("Some error was encountered when trying to obtain the row count for resource {} from {}".format(resource_id,site))
+        success = False
     if row_count == 0: # or if the datastore is not active
        print("No data found in the datastore.")
        success = False
@@ -457,14 +508,15 @@ def get_lease_count(zone,start_date,end_date):
 def get_hourly_rate(zone,start_date,end_date,start_hour,end_hour):
     # Some corrections will be needed, e.g., for zones that come up as "MULTIRATE".
 
-    # start_hour and end_hour are being passed since there are a few oddball 
+    # start_hour and end_hour are being passed since there are a few oddball
     # cases where the rate has been dependent on the time of day.
     space_count, hourly_rate = get_space_count_and_rate(zone,start_date,end_date)
     return hourly_rate
 
 def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
     """Utilization = (Revenue from parking purchases) / { ([# of spots] - 0.85*[# of leases]) * (rate per hour) * (the number of days in the time span where parking is not free) * (duration of slot in hours) }"""
-    revenue, transaction_count = get_revenue_and_count(zone,start_date,end_date,start_hour,end_hour)
+
+    revenue, transaction_count = get_revenue_and_count(ref_time,zone,start_date,end_date,start_hour,end_hour)
     lease_count = get_lease_count(zone,start_date,end_date)
     if lease_count is None:
         lease_count = 0
@@ -477,8 +529,10 @@ def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
     utilization = revenue/effective_space_count/hourly_rate/non_free_days/slot_duration
     return utilization, revenue, transaction_count
 
-def load_and_cache_utilization(zone,start_date,end_date,start_hour,end_hour):
+def load_and_cache_utilization(zone,search_by,start_date,end_date,start_hour,end_hour):
     # Should this instead combine all the hour ranges?
+
+    # [ ] This function is not yet doing any caching.
     ut, rev, transaction_count = calculate_utilization(zone,start_date,end_date,start_hour,end_hour)
     return {'total_payments': rev, 'transaction_count': transaction_count, 'utilization': ut}
 
@@ -488,12 +542,22 @@ def get_features(request):
     of zone and quarter (eventually extend this to date range) and return them.
     """
     zone = request.GET.get('zone', None)
-    quarter = request.GET.get('quarter', None)
-    # Convert quarter to start_date and end_date
-    print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
+    search_by = request.GET.get('search_by', 'month')
+    if search_by == 'quarter':
+        quarter = request.GET.get('quarter', None)
+        # Convert quarter to start_date and end_date
+        print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
 
-    start_date, end_date = quarter_to_dates(quarter)
-  
+        start_dt, end_dt, start_date, end_date = quarter_to_datetimes(quarter)
+
+    elif search_by == 'month':
+        month = int(request.GET.get('month', None))
+        year = int(request.GET.get('year', None))
+        # Convert month/year to start_date and end_date
+        print("Retrieved zone = '{}' and month/year = '{}/{}'".format(zone,month,year))
+
+        start_dt, end_dt, start_date, end_date = datetimes_for_month(year,month)
+
     space_count, hourly_rate = get_space_count_and_rate(zone,start_date,end_date)
     leases = get_lease_count(zone,start_date,end_date)
 
@@ -509,20 +573,40 @@ def get_features(request):
 def get_dates(request):
     """
     Look up the start_date and end_date for this combination
-    of zone and quarter (eventually extend this to date range) and return them.
+    of zone and quarter/month (eventually extend this to date range) and return them.
     """
-    zone = request.GET.get('zone', None)
-    quarter = request.GET.get('quarter', None)
-    # Convert quarter to start_date and end_date
-    print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
+    # Note that end_date is the last date (NON-INCLUSIVE) of a date range
+    # That is, dates = [start_date, end_date)
+    # The end_date for October 2018 is 2018-11-01.
 
-    start_date, end_date = quarter_to_dates(quarter)
-  
-    data = {
-        'start_date': format_date(start_date),
-        'end_date': format_date(end_date),
-        'quarter': quarter
-    }
+    zone = request.GET.get('zone', None)
+    search_by = request.GET.get('search_by', 'month')
+    if search_by == 'quarter':
+        quarter = request.GET.get('quarter', None)
+        # Convert quarter to start_date and end_date
+        print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
+
+        start_dt, end_dt, start_date, end_date = quarter_to_datetimes(quarter)
+
+        data = {
+            'start_dt': start_dt,
+            'end_dt': end_dt,
+            'quarter': quarter
+        }
+    elif search_by == 'month':
+        month = int(request.GET.get('month', None))
+        year = int(request.GET.get('year', None))
+        # Convert month/year to start_date and end_date
+        print("Retrieved zone = '{}' and month/year = '{}/{}'".format(zone,month,year))
+
+        start_dt, end_dt, start_date, end_date = datetimes_for_month(year,month)
+
+        data = {
+            'start_dt': start_dt,
+            'end_dt': end_dt,
+            'month': month,
+            'year': year
+        }
 
     pprint(data)
     return JsonResponse(data)
@@ -530,26 +614,33 @@ def get_dates(request):
 def get_results(request):
     """
     Look up the utilization, total payments, and transaction count for this combination
-    of zone and quarter (eventually extend this to date range) and return them.
+    of zone and quarter/month (eventually extend this to arbitrary date range) and return them.
     """
     zone = request.GET.get('zone', None)
-    quarter = request.GET.get('quarter', None)
-    # Convert quarter to start_date and end_date
-    print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
+    search_by = request.GET.get('search_by', 'month')
+    if search_by == 'quarter':
+        quarter = request.GET.get('quarter', None)
 
-    start_date, end_date = quarter_to_dates(quarter)
-  
+        # Convert quarter to start_date and end_date
+        print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
+
+        start_dt, end_dt, start_date, end_date = quarter_to_datetimes(quarter)
+    elif search_by == 'month':
+        month = int(request.GET.get('month', None))
+        year = int(request.GET.get('year', None))
+        start_date, end_date = dates_for_month(year,month)
+
     r_list = []
-    set_table()
+    set_table(ref_time)
     for key in hour_ranges:
         start_hour = hour_ranges[key]['start_hour']
         end_hour = hour_ranges[key]['end_hour']
-        r_dict = load_and_cache_utilization(zone,start_date,end_date,start_hour,end_hour)
+        r_dict = load_and_cache_utilization(zone,search_by,start_date,end_date,start_hour,end_hour)
         #results_dict['hour_range'] = key
         #r_list.append(results_dict)
         row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'])
         r_list.append( row )
-    clear_table()
+    clear_table(ref_time)
 
     #result = any(p['id'] == dataset_id for p in rlist)
     #match = None
@@ -563,9 +654,13 @@ def get_results(request):
     #   resource_choices.append(pair[::-1])
     data = {
         'display_zone': zone,
-        'display_quarter': quarter,
         'output_table': format_as_table(r_list)
     }
+    if search_by == 'quarter':
+        data['display_quarter'] = quarter
+    elif search_by == 'month':
+        data['display_month'] = month
+        data['display_year'] = year
 
     return JsonResponse(data)
 
@@ -576,22 +671,56 @@ def index(request):
     all_zones = get_zones()
     zone_choices = convert_to_choices(all_zones)
     initial_zone = all_zones[0]
-    initial_quarter_choices = get_quarter_choices() # These should eventually be dependent on the initially chosen zone.
-    initial_quarter = initial_quarter_choices[0][0]
+    search_choices = convert_to_choices(['month','quarter'])
 
-    d = datetime.now().date() - timedelta(days = 365) 
+    d = datetime.now().date() - timedelta(days = 365)
+    search_by = 'month'
+    if search_by == 'quarter':
+        initial_quarter_choices = get_quarter_choices() # These should eventually be dependent on the initially chosen zone.
+        initial_quarter = initial_quarter_choices[0][0]
+        start_dt, end_dt, start_date, end_date = quarter_to_datetimes(initial_quarter)
 
-    start_date = beginning_of_quarter(d)
-    end_date = end_of_quarter(d)
+        class QuarterSpaceTimeForm(forms.Form):
+            zone = forms.ChoiceField(choices=zone_choices)
+            quarter = forms.ChoiceField(choices=initial_quarter_choices)
+            search_by = forms.ChoiceField(choices=search_choices)
+            #input_field = forms.ChoiceField(choices=first_field_choices, help_text="(what you have in your spreadsheet)")
+            #input_column_index = forms.CharField(initial='B',
+            #    label="Input column",
+            #    help_text='(the column in your spreadsheet where the values you want to convert can be found [e.g., "B"])',
+            #    widget=forms.TextInput(attrs={'size':2}))
+            #output_field = forms.ChoiceField(choices=first_field_choices, help_text="(what you want to convert your spreadsheet column to)")
+    elif search_by == 'month':
+        now = datetime.now()
+        first_year = 2016
+        years = range(first_year,now.year+1)
+        initial_year_choices = convert_to_choices(years)
+        initial_month_choices = convert_to_choices(range(1,13))
+
+        initial_month = d.month
+        initial_year = d.year
+        start_dt, end_dt, start_date, end_date = datetimes_for_month(initial_year,initial_month)
+
+        print("Start of month for date = {} is {} and end of month is {}".format(d,start_date,end_date))
+
+        class MonthSpaceTimeForm(forms.Form):
+            zone = forms.ChoiceField(choices=zone_choices) #, initial = "401 - Downtown 1")
+            year = forms.ChoiceField(choices=initial_year_choices)
+            month = forms.ChoiceField(choices=initial_month_choices)
+            search_by = forms.ChoiceField(choices=search_choices)
+    else:
+        raise ValueError("This view is not provisioned to handle a search_by value of {}.".format(search_by))
+
+
     spaces, rate = get_space_count_and_rate(initial_zone,start_date,end_date)
     leases = get_lease_count(initial_zone,start_date,end_date)
 
     zone_features = {'spaces': spaces,
             'rate': rate,
             'leases': leases}
-    
+
     results = []
-    set_table()
+    set_table(ref_time)
     for key in hour_ranges:
         start_hour = hour_ranges[key]['start_hour']
         end_hour = hour_ranges[key]['end_hour']
@@ -600,35 +729,38 @@ def index(request):
         #results.append( {'hour_range': key, 'total_payments': revenue, 'transaction_count': transaction_count, 'utilization': ut} )
         row = format_row(key, revenue, transaction_count, ut)
         results.append( row )
-    clear_table()
+    clear_table(ref_time)
     pprint(results)
-
-    class SpaceTimeForm(forms.Form):
-        zone = forms.ChoiceField(choices=zone_choices) #, initial = "401 - Downtown 1")
-        quarter = forms.ChoiceField(choices=initial_quarter_choices)
-        #input_field = forms.ChoiceField(choices=first_field_choices, help_text="(what you have in your spreadsheet)")
-        #input_column_index = forms.CharField(initial='B',
-        #    label="Input column",
-        #    help_text='(the column in your spreadsheet where the values you want to convert can be found [e.g., "B"])',
-        #    widget=forms.TextInput(attrs={'size':2}))
-        #output_field = forms.ChoiceField(choices=first_field_choices, help_text="(what you want to convert your spreadsheet column to)")
 
     #template = loader.get_template('index.html')
     #context = {#'output': output,
     #            'zone_picker': SpaceTimeForm().as_p()}
-    st_form = SpaceTimeForm()
+    if search_by == 'quarter':
+        st_form = QuarterSpaceTimeForm()
+    elif search_by == 'month':
+        st_form = MonthSpaceTimeForm()
     #st_form.fields['zone'].initial = ["401 - Downtown 1"]
 
     output_table = format_as_table(results)
 
     context = {'zone_picker': st_form.as_p(),
+            'form': st_form,
             'start_date': format_date(start_date),
             'end_date': format_date(end_date),
+            'start_dt': start_dt,
+            'end_dt': end_dt,
             'display_zone': initial_zone,
-            'display_quarter': initial_quarter,
             'zone_features': zone_features,
             'results': results,
-            'output_table': output_table}
+            'output_table': output_table,
+            'search_by': search_by}
+
+    if search_by == 'quarter':
+        context['display_quarter'] = initial_quarter
+    elif search_by == 'month':
+        context['display_month'] = initial_month
+        context['display_year'] = initial_year
+
     return render(request, 'valet/index.html', context)
 
     #return HttpResponse(template.render(context, request))

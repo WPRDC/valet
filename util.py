@@ -61,10 +61,10 @@ def parking_days_in_month(year,month):
 
 def parking_days_in_range(start_date,end_date):
     """This function accepts date objects and finds the number of non-free parking days
-    between them (including both the start and end dates)."""
+    between them (including the start date but not the end date)."""
     count = 0
     date_i = start_date
-    while date_i <= end_date:
+    while date_i < end_date:
         if date_i.weekday() < 6 and not is_holiday(date_i):
             count += 1
         date_i += timedelta(days=1)
