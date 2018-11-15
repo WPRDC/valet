@@ -42,13 +42,57 @@ def query_resource(site,query,API_key=None):
     data = response['records']
     return data
 
+def get_package_parameter(site,package_id,parameter=None,API_key=None):
+    """Gets a CKAN package parameter. If no parameter is specified, all metadata
+    for that package is returned."""
+    # Some package parameters you can fetch from the WPRDC with
+    # this function are:
+    # 'geographic_unit', 'owner_org', 'maintainer', 'data_steward_email',
+    # 'relationships_as_object', 'access_level_comment',
+    # 'frequency_publishing', 'maintainer_email', 'num_tags', 'id',
+    # 'metadata_created', 'group', 'metadata_modified', 'author',
+    # 'author_email', 'state', 'version', 'department', 'license_id',
+    # 'type', 'resources', 'num_resources', 'data_steward_name', 'tags',
+    # 'title', 'frequency_data_change', 'private', 'groups',
+    # 'creator_user_id', 'relationships_as_subject', 'data_notes',
+    # 'name', 'isopen', 'url', 'notes', 'license_title',
+    # 'temporal_coverage', 'related_documents', 'license_url',
+    # 'organization', 'revision_id'
+    try:
+        ckan = ckanapi.RemoteCKAN(site, apikey=API_key)
+        metadata = ckan.action.package_show(id=package_id)
+        if parameter is None:
+            return metadata
+        else:
+            return metadata[parameter]
+    except:
+        raise RuntimeError("Unable to obtain package parameter '{}' for package with ID {}".format(parameter,package_id))
+
+def find_resource_id(site,package_id,resource_name,API_key=None):
+#def get_resource_id_by_resource_name():
+    # Get the resource ID given the package ID and resource name.
+    resources = get_package_parameter(site,package_id,'resources',API_key)
+    for r in resources:
+        if r['name'] == resource_name:
+            return r['id']
+    return None
+
+
 def get_resource_id(ref_time):
+    by_name = True
     if ref_time == 'hybrid':
         from .credentials import transactions_resource_id as resource_id
     elif ref_time == 'purchase_time':
-        #from .credentials import split_pdl_transactions_resource_id as resource_id # Maybe not quite right.
-        #from .credentials import debug_resource_id as resource_id
-        from .credentials import office_debug_resource_id as resource_id
+        if by_name:
+            from .credentials import site, ckan_api_key as API_key, transactions_package_id as package_id, resource_name
+            resource_id = find_resource_id(site,package_id,resource_name,API_key)
+            if resource_id is None:
+                raise ValueError("No resource found for package ID = {}, resource name = {}.".format(package_id,resource_name))
+        else:
+            #from credentials import split_pdl_transactions_resource_id as resource_id
+            #from credentials import office_debug_resource_id as resource_id
+            #from credentials import split_resource_id as resource_id
+            from credentials import transactions_production_resource_id as resource_id
     else:
         raise ValueError("ref_time must specify the reference time to determine the correct resource ID.")
     return resource_id
