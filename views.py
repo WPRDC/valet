@@ -674,7 +674,7 @@ def index(request):
     initial_zone = all_zones[0]
     search_choices = convert_to_choices(['month','quarter'])
 
-    d = datetime.now().date() - timedelta(days = 365)
+    initial_d = datetime.now().date() - timedelta(days = 365)
     search_by = 'month'
     if search_by == 'quarter':
         initial_quarter_choices = get_quarter_choices() # These should eventually be dependent on the initially chosen zone.
@@ -698,11 +698,11 @@ def index(request):
         initial_year_choices = convert_to_choices(years)
         initial_month_choices = convert_to_choices(range(1,13))
 
-        initial_month = d.month
-        initial_year = d.year
+        initial_month = initial_d.month
+        initial_year = initial_d.year
         start_dt, end_dt, start_date, end_date = datetimes_for_month(initial_year,initial_month)
 
-        print("Start of month for date = {} is {} and end of month is {}".format(d,start_date,end_date))
+        print("Start of month for date = {} is {} and end of month is {}".format(initial_d,start_date,end_date))
 
         class MonthSpaceTimeForm(forms.Form):
             zone = forms.ChoiceField(choices=zone_choices) #, initial = "401 - Downtown 1")
@@ -739,7 +739,7 @@ def index(request):
     if search_by == 'quarter':
         st_form = QuarterSpaceTimeForm()
     elif search_by == 'month':
-        st_form = MonthSpaceTimeForm()
+        st_form = MonthSpaceTimeForm(initial = {'year': initial_year, 'month': initial_month, 'zone': initial_zone})
     #st_form.fields['zone'].initial = ["401 - Downtown 1"]
 
     output_table = format_as_table(results)
