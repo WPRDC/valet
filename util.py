@@ -99,19 +99,10 @@ def format_as_table(results):
 #    </tr>
 #{% endfor %}
 #</table>
-    t = """<table>
-    \t<thead>
-    \t<tr>
-    \t\t<th>Hour range</th>
-    \t\t<th>Revenue</th>
-    \t\t<th>Transactions</th>
-    \t\t<th>Utilization</th>
-    \t</tr>
-    \t</thead>\n"""
-    t += "\t<tbody>\n"
+    t = """<table><thead><tr><th>Hour range\t</th><th>Revenue\t</th><th>Transactions\t</th><th>Utilization\t</th></tr></thead>"""
+    t += "<tbody>"
     for r in results:
-        t += "\t<tr>\n \t\t<td>{}</td>\n \t\t<td>{}</td>\n \t\t<td>{}</td>\n \t\t<td>{}</td>\n \t</tr>\n".format(r['hour_range'], r['total_payments'], r['transaction_count'], r['utilization'])
-    t += "\t</tbody>\n"
-    t += "</table>\n"
+        t += "<tr><td>{}\t</td><td>{}\t</td><td>{}\t</td><td>{}\t</td></tr>".format(r['hour_range'], r['total_payments'], r['transaction_count'], r['utilization'])
+    t += "</tbody></table>"
 
     return t
