@@ -165,10 +165,11 @@ td {
                     {% autoescape off %}
                     {{ output_table }}
                     {% endautoescape %}
+                    <button onclick="copyTable()">Copy table</button>
                 </div>
             </div>
         </div>
-
+        <P></P>
         <div class="row">
             <div class="six columns">
                 <h5>Zone/lot features for selected lot</h5>
@@ -184,6 +185,43 @@ td {
         </div>
     </div>
 </div>
+<script>
+    const copyToClipboard = str => {
+      const el = document.createElement('textarea');
+      el.value = str;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    };
+
+    function copyTable() {
+        var t = document.getElementById("results_table");
+        var trs = t.getElementsByTagName("tr");
+        var importable = "";
+
+        for (var i=0; i<trs.length; i++)
+        {
+            ths = trs[i].getElementsByTagName("th");
+            tds = trs[i].getElementsByTagName("td");
+            if (tds.length === 0) {
+                tds = ths;
+            }
+            for (var n=0; n<tds.length;n++)
+            {
+                importable += tds[n].textContent;
+            }
+            importable = importable.slice(0, -1);
+            if (i < trs.length - 1) {
+ 
+                importable += "\n";
+            }
+
+        }
+      copyToClipboard(importable);
+      alert("Copied the text: " + importable);
+    }
+</script>
 {% endblock content %}
 {% block footer %}
 {% endblock footer %}
