@@ -210,10 +210,13 @@ td {
             }
             for (var n=0; n<tds.length;n++)
             {
+                if (useCommas) {
+                    importable += '"';
+                }
                 importable += tds[n].textContent;
                 if (useCommas) {
                     importable = importable.slice(0, -1);
-                    importable += ',';
+                    importable += '",';
                 }
             }
             importable = importable.slice(0, -1);
