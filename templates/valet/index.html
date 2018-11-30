@@ -225,29 +225,9 @@ td {
     }
 
     function copyTable() {
-        var t = document.getElementById("results_table");
-        var trs = t.getElementsByTagName("tr");
-        var importable = "";
-
-        for (var i=0; i<trs.length; i++)
-        {
-            ths = trs[i].getElementsByTagName("th");
-            tds = trs[i].getElementsByTagName("td");
-            if (tds.length === 0) {
-                tds = ths;
-            }
-            for (var n=0; n<tds.length;n++)
-            {
-                importable += tds[n].textContent;
-            }
-            importable = importable.slice(0, -1);
-            if (i < trs.length - 1) {
-                importable += "\n";
-            }
-
-        }
-      copyToClipboard(importable);
-      alert("Copied the text: " + importable);
+        importable = reformatTable(false);
+        copyToClipboard(importable);
+        alert("Copied the text: " + importable);
     }
 
     function download(filename) {
