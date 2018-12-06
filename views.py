@@ -600,20 +600,16 @@ def get_dts_from_date_range(request):
 
 def get_dates(request):
     """
-    Look up the start_date and end_date for this combination
-    of zone and quarter/month (eventually extend this to date range) and return them.
+    Look up the start_date and end_date for this date range/quarter/month 
+    and return them.
     """
     # Note that end_date is the last date (NON-INCLUSIVE) of a date range
     # That is, dates = [start_date, end_date)
     # The end_date for October 2018 is 2018-11-01.
 
-    zone = request.GET.get('zone', None)
     search_by = request.GET.get('search_by', 'month')
     if search_by == 'date':
-
         start_dt, end_dt = get_dts_from_date_range(request)
-
-        print("start_dt = {}, end_dt = {}".format(start_dt,end_dt))
         data = {
             'start_dt': start_dt,
             'end_dt': end_dt,
@@ -622,10 +618,7 @@ def get_dates(request):
     elif search_by == 'quarter':
         quarter = request.GET.get('quarter', None)
         # Convert quarter to start_date and end_date
-        print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
-
         start_dt, end_dt, start_date, end_date = quarter_to_datetimes(quarter)
-
         data = {
             'start_dt': start_dt,
             'end_dt': end_dt,
@@ -633,14 +626,10 @@ def get_dates(request):
             'display_time_range': quarter
         }
     elif search_by == 'month':
-        # Convert quarter to start_date and end_date
         month = int(request.GET.get('month', None))
         year = int(request.GET.get('year', None))
         # Convert month/year to start_date and end_date
-        print("Retrieved zone = '{}' and month/year = '{}/{}'".format(zone,month,year))
-
         start_dt, end_dt, start_date, end_date = datetimes_for_month(year,month)
-
         data = {
             'start_dt': start_dt,
             'end_dt': end_dt,
