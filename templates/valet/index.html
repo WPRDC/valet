@@ -4,6 +4,7 @@
 
 {% block stylesheet %}
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
 <link rel="stylesheet" type="text/css" href="{% static 'valet/css/skeleton.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'valet/css/normalize.css' %}">
 <style>
@@ -23,6 +24,7 @@ td {
 {% endblock stylesheet %}
 
 {% block javascript %}
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   <script type="text/javascript">
     function hide_results(bool) {
@@ -81,7 +83,6 @@ td {
             $("#end_dt").html(data.end_dt);
             }
         });
-
     }
 
     function regenerate_output() {
@@ -117,7 +118,12 @@ td {
     $("#id_month").change(regenerate_output);
     $("#id_year").change(regenerate_output);
     hide_results(false);
-  </script>
+    </script>
+    <script>
+        $( function() {
+            $( "#tabs" ).tabs();
+        } );
+    </script>
 {% endblock %}
 
 {% block content %}
@@ -140,17 +146,37 @@ td {
                         </span>
                     </div>
                     <div class = "six columns">
-                        <span>
-                            {{ form.year.errors }}
-                            <b>Year:</b>
-                            {{ form.year }}
-                        </span>
-                        &nbsp;
-                        <span>
-                            {{ form.month.errors }}
-                            <b>Month:</b>
-                            {{ form.month }}
-                        </span>
+                        <div id="tabs">
+                          <ul>
+                            <li><a href="#month-tab">Month picker</a></li>
+                            <li><a href="#date-tab">Date-range picker</a></li>
+                          </ul>
+                          <div id="month-tab">
+                              <p><span>
+                                    {{ form.year.errors }}
+                                    <b>Year:</b>
+                                    {{ form.year }}
+                                </span>
+                                &nbsp;
+                                <span>
+                                    {{ form.month.errors }}
+                                    <b>Month:</b>
+                                    {{ form.month }}
+                                </span>
+                              </p>
+                          </div>
+                          <div id="date-tab">
+                            <div>
+                                <b>From:</b>
+                                <input type="text" id="fromdatepicker">
+                            </div>
+                            <div>
+                                <b>To:</b>
+                                <input type="text" id="todatepicker">
+                            </div>
+                          </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -174,19 +200,72 @@ td {
         <div class="row">
             <div class="six columns">
                 <h5>Zone/lot features for selected lot</h5>
-                <b>Selected lot:</b> <span id="output_zone">{{ display_zone }}</span><br> 
+                <b>Selected lot:</b> <span id="output_zone">{{ display_zone }}</span><br>
                 <b>Rate:</b> $<span id="rate">{{ zone_features.rate }}</span>/hour, <b>Space count:</b> <span id="spaces">{{ zone_features.spaces }}</span>, <b>Lease count:</b> <span id="leases">{{ zone_features.leases }}</span>
             </div>
             <div class="six columns">
                 <h5>Date range for selected time range</h5>
-                <b>Selected month and year:</b> <span id="selected_month">{{ display_month }}</span>/<span id="selected_year">{{ display_year }}</span><br>
                 <b>Start datetime:</b> <span id="start_dt">{{ start_dt }}</span><br>
-                <b>End datetime:</b> <span id="end_dt">{{ end_dt }}</span>
+                <b>End datetime:</b> <span id="end_dt">{{ end_dt }}</span><br>
+                <b>Selected month and year:</b> <span id="selected_month">{{ display_month }}</span>/<span id="selected_year">{{ display_year }}</span>
             </div>
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
 <script>
+
+    var frompicker = new Pikaday({
+        field: document.getElementById('fromdatepicker'),
+        format: 'YYYY-MM-DD',
+        toString(date, format) {
+            // you should do formatting based on the passed format,
+            // but we will just return 'D/M/YYYY' for simplicity
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            const year = date.getFullYear();
+
+            var mm   = ((month > 9) ? '' : '0') + month;
+            var dd   = ((day > 9)   ? '' : '0') + day;
+
+            return `${year}-${mm}-${dd}`;
+        },
+        parse(dateString, format) {
+            // dateString is the result of `toString` method
+            const parts = dateString.split('/');
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const year = parseInt(parts[2], 10);
+            return new Date(year, month, day);
+        }
+    });
+
+
+    var topicker = new Pikaday({
+        field: document.getElementById('todatepicker'),
+        format: 'YYYY-MM-DD',
+        toString(date, format) {
+            // you should do formatting based on the passed format,
+            // but we will just return 'D/M/YYYY' for simplicity
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            const year = date.getFullYear();
+
+            var mm   = ((month > 9) ? '' : '0') + month;
+            var dd   = ((day > 9)   ? '' : '0') + day;
+
+            return `${year}-${mm}-${dd}`;
+        },
+        onSelect: function() {refresh_dates()},
+        parse(dateString, format) {
+            // dateString is the result of `toString` method
+            const parts = dateString.split('/');
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const year = parseInt(parts[2], 10);
+            return new Date(year, month, day);
+        }
+    });
     const copyToClipboard = str => {
       const el = document.createElement('textarea');
       el.value = str;
