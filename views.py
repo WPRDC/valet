@@ -571,6 +571,33 @@ def get_features(request):
     pprint(data)
     return JsonResponse(data)
 
+def get_dts_from_date_range(request):
+    """Take a request, extract the from_date and to_date parameters and convert them to
+    start_dt and end_dt datetimes, handling cases where both values are unchosen by
+    picking the most recent full day (yesterday) and handling cases where only one
+    value has been chosen by selecting a one-day interval."""
+
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
+    # Convert quarter to start_date and end_date
+    print("Retrieved from_date = '{}' and to_date = '{}'".format(from_date,to_date))
+
+    if from_date not in [None, '']:
+        start_dt = datetime.strptime(from_date, "%Y-%m-%d")
+        if to_date in [None, '']:
+            end_dt = start_dt + timedelta(days = 1)
+        else:
+            end_dt = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days = 1)
+    else:
+        if to_date not in [None, '']:
+            end_dt = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days = 1)
+            start_dt = end_dt - timedelta(days = 1)
+        else: # They're both None.
+            end_dt = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            start_dt = end_dt - timedelta(days = 1)
+
+    return start_dt, end_dt
+
 def get_dates(request):
     """
     Look up the start_date and end_date for this combination
@@ -583,29 +610,14 @@ def get_dates(request):
     zone = request.GET.get('zone', None)
     search_by = request.GET.get('search_by', 'month')
     if search_by == 'date':
-        from_date = request.GET.get('from_date', None)
-        to_date = request.GET.get('to_date', None)
-        # Convert quarter to start_date and end_date
-        print("Retrieved zone = '{}' and from_date = '{}' and to_date = '{}'".format(zone,from_date,to_date))
 
-        if from_date is not None:
-            start_dt = datetime.strptime(from_date, "%Y-%m-%d")
-            if to_date is None:
-                end_dt = start_dt + timedelta(days = 1)
-            else:
-                end_dt = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days = 1)
-        else:
-            if to_date is not None:
-                end_dt = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days = 1)
-            else: # They're both None.
-                end_dt = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-                start_dt = end_dt - timedelta(days = 1)
-
+        start_dt, end_dt = get_dts_from_date_range(request)
 
         print("start_dt = {}, end_dt = {}".format(start_dt,end_dt))
         data = {
             'start_dt': start_dt,
             'end_dt': end_dt,
+            'display_time_range': "{} through {}".format(start_dt.date(), end_dt.date() - timedelta(days=1))
         }
     elif search_by == 'quarter':
         quarter = request.GET.get('quarter', None)
@@ -617,9 +629,11 @@ def get_dates(request):
         data = {
             'start_dt': start_dt,
             'end_dt': end_dt,
-            'quarter': quarter
+            'quarter': quarter,
+            'display_time_range': quarter
         }
     elif search_by == 'month':
+        # Convert quarter to start_date and end_date
         month = int(request.GET.get('month', None))
         year = int(request.GET.get('year', None))
         # Convert month/year to start_date and end_date
@@ -631,7 +645,8 @@ def get_dates(request):
             'start_dt': start_dt,
             'end_dt': end_dt,
             'month': month,
-            'year': year
+            'year': year,
+            'display_time_range': "{}/{}".format(month,year)
         }
 
     pprint(data)
@@ -651,10 +666,19 @@ def get_results(request):
         print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
 
         start_dt, end_dt, start_date, end_date = quarter_to_datetimes(quarter)
+        display_time_range = quarter
+    elif search_by == 'date':
+        start_dt, end_dt = get_dts_from_date_range(request)
+        start_date = start_dt.date()
+        end_date = end_dt.date()
+        display_time_range = "{} through {}".format(start_date, (end_dt - timedelta(days=1)).date())
     elif search_by == 'month':
         month = int(request.GET.get('month', None))
         year = int(request.GET.get('year', None))
         start_date, end_date = dates_for_month(year,month)
+        # end_date is the first day that is not included in the date range.
+        # [start_date, end_date)
+        display_time_range = "{}/{}".format(month,year)
 
     r_list = []
     set_table(ref_time)
@@ -680,13 +704,9 @@ def get_results(request):
     #   resource_choices.append(pair[::-1])
     data = {
         'display_zone': zone,
-        'output_table': format_as_table(r_list)
+        'output_table': format_as_table(r_list),
+        'display_time_range': display_time_range
     }
-    if search_by == 'quarter':
-        data['display_quarter'] = quarter
-    elif search_by == 'month':
-        data['display_month'] = month
-        data['display_year'] = year
 
     return JsonResponse(data)
 
@@ -782,11 +802,12 @@ def index(request):
             'output_table': output_table,
             'search_by': search_by}
 
-    if search_by == 'quarter':
-        context['display_quarter'] = initial_quarter
+    if search_by == 'date':
+        context['display_time_range'] = "{} through {}".format(start_date, end_date - timedelta(days=1))
+    elif search_by == 'quarter':
+        context['display_time_range'] = initial_quarter
     elif search_by == 'month':
-        context['display_month'] = initial_month
-        context['display_year'] = initial_year
+        context['display_time_range'] = "{}/{}".format(initial_month,initial_year)
 
     return render(request, 'valet/index.html', context)
 

@@ -90,8 +90,7 @@ td {
         },
         dataType: 'json',
         success: function (data) {
-            $("#selected_month").html(data.month)
-            $("#selected_year").html(data.year)
+            $("#selected_time_range").html(data.display_time_range)
             $("#start_dt").html(data.start_dt)
             $("#end_dt").html(data.end_dt);
             }
@@ -118,8 +117,7 @@ td {
             hide_results(false)
             $("#output").html(data.output_table)
             $("#output_zone").html(data.display_zone)
-            $("#selected_year").html(data.year)
-            $("#selected_month").html(data.month)
+            $("#selected_time_range").html(data.display_time_range)
             }
         });
     }
@@ -218,9 +216,9 @@ td {
             </div>
             <div class="six columns">
                 <h5>Date range for selected time range</h5>
+                <b>Selected range:</b> <span id="selected_time_range">{{ display_time_range }}</span><br>
                 <b>Start datetime:</b> <span id="start_dt">{{ start_dt }}</span><br>
-                <b>End datetime:</b> <span id="end_dt">{{ end_dt }}</span><br>
-                <b>Selected month and year:</b> <span id="selected_month">{{ display_month }}</span>/<span id="selected_year">{{ display_year }}</span>
+                <b>End datetime:</b> <span id="end_dt">{{ end_dt }}</span>
             </div>
         </div>
     </div>
@@ -243,6 +241,7 @@ td {
 
             return `${year}-${mm}-${dd}`;
         },
+        onSelect: function() {refresh_dates()},
         parse(dateString, format) {
             // dateString is the result of `toString` method
             const parts = dateString.split('/');
