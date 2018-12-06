@@ -66,7 +66,14 @@ td {
     function refresh_dates() {
         var month = $("#id_month").val();
         var year = $("#id_year").val();
-        var search_by = $("id_search_by").val();
+
+        if (document.getElementById("date-tab").getAttribute("aria-hidden") == "false") {
+            var search_by = "date";
+        } else if (document.getElementById("month-tab").getAttribute("aria-hidden") == "false") {
+            var search_by = "month";
+        } else {
+            var search_by = "new mode";
+        }
 
         $.ajax({
         url: 'ajax/get_dates/',
