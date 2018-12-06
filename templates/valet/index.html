@@ -101,6 +101,17 @@ td {
         var year = $("#id_year").val();
         var search_by = $("id_search_by").val();
 
+        var from_date = frompicker.toString('YYYY-MM-DD');
+        var to_date = topicker.toString('YYYY-MM-DD');
+
+        if (document.getElementById("date-tab").getAttribute("aria-hidden") == "false") {
+            var search_by = "date";
+        } else if (document.getElementById("month-tab").getAttribute("aria-hidden") == "false") {
+            var search_by = "month";
+        } else {
+            var search_by = "new mode";
+        }
+
         hide_results(true);
         $.ajax({
             url: 'ajax/get_results/',
@@ -108,7 +119,9 @@ td {
             'zone': zone,
             'month': month,
             'year': year,
-            'search_by': search_by
+            'search_by': search_by,
+            'from_date': from_date,
+            'to_date': to_date
         },
         dataType: 'json',
         success: function (data) {
