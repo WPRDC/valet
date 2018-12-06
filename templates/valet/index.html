@@ -241,7 +241,15 @@ td {
 
             return `${year}-${mm}-${dd}`;
         },
-        onSelect: function() {refresh_dates()},
+        onSelect: function() {
+            refresh_dates();
+            regenerate_output();
+            topicker.setMinDate(new Date(this.getDate().getTime()+parseInt(0*24*60*60*1000)));
+            if(Number(new Date(this.getDate()))>Number(new Date(document.getElementById('todatepicker').value)))
+            {
+                document.getElementById('todatepicker').value="";
+            }
+        },
         parse(dateString, format) {
             // dateString is the result of `toString` method
             const parts = dateString.split('/');
@@ -268,7 +276,15 @@ td {
 
             return `${year}-${mm}-${dd}`;
         },
-        onSelect: function() {refresh_dates()},
+        onSelect: function() {
+            frompicker.setMaxDate(new Date(this.getDate().getTime()+parseInt(0*24*60*60*1000)));
+            if(Number(new Date(this.getDate()))<Number(new Date(document.getElementById('fromdatepicker').value)))
+            {
+                document.getElementById('fromdatepicker').value="";
+            }
+            refresh_dates();
+            regenerate_output();
+        },
         parse(dateString, format) {
             // dateString is the result of `toString` method
             const parts = dateString.split('/');
