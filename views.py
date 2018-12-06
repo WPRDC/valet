@@ -582,7 +582,32 @@ def get_dates(request):
 
     zone = request.GET.get('zone', None)
     search_by = request.GET.get('search_by', 'month')
-    if search_by == 'quarter':
+    if search_by == 'date':
+        from_date = request.GET.get('from_date', None)
+        to_date = request.GET.get('to_date', None)
+        # Convert quarter to start_date and end_date
+        print("Retrieved zone = '{}' and from_date = '{}' and to_date = '{}'".format(zone,from_date,to_date))
+
+        if from_date is not None:
+            start_dt = datetime.strptime(from_date, "%Y-%m-%d")
+            if to_date is None:
+                end_dt = start_dt + timedelta(days = 1)
+            else:
+                end_dt = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days = 1)
+        else:
+            if to_date is not None:
+                end_dt = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days = 1)
+            else: # They're both None.
+                end_dt = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+                start_dt = end_dt - timedelta(days = 1)
+
+
+        print("start_dt = {}, end_dt = {}".format(start_dt,end_dt))
+        data = {
+            'start_dt': start_dt,
+            'end_dt': end_dt,
+        }
+    elif search_by == 'quarter':
         quarter = request.GET.get('quarter', None)
         # Convert quarter to start_date and end_date
         print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
@@ -664,6 +689,7 @@ def get_results(request):
         data['display_year'] = year
 
     return JsonResponse(data)
+
 
 def index(request):
     if not request.user.is_authenticated():
