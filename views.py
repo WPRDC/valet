@@ -666,19 +666,16 @@ def get_results(request):
         print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
 
         start_dt, end_dt, start_date, end_date = quarter_to_datetimes(quarter)
-        display_time_range = quarter
     elif search_by == 'date':
         start_dt, end_dt = get_dts_from_date_range(request)
         start_date = start_dt.date()
         end_date = end_dt.date()
-        display_time_range = "{} through {}".format(start_date, (end_dt - timedelta(days=1)).date())
     elif search_by == 'month':
         month = int(request.GET.get('month', None))
         year = int(request.GET.get('year', None))
         start_date, end_date = dates_for_month(year,month)
         # end_date is the first day that is not included in the date range.
         # [start_date, end_date)
-        display_time_range = "{}/{}".format(month,year)
 
     r_list = []
     set_table(ref_time)
@@ -705,7 +702,6 @@ def get_results(request):
     data = {
         'display_zone': zone,
         'output_table': format_as_table(r_list),
-        'display_time_range': display_time_range
     }
 
     return JsonResponse(data)
