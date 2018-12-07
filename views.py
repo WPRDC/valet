@@ -471,7 +471,15 @@ def get_space_count_and_rate(zone,start_date,end_date):
             min_diff = diff
             closest_date = u
 
-    return spaces[closest_date][zone], rates[closest_date][zone]
+    # Crude first attempt to handle zones which do not appear
+    # in the existing data (like 427 - Knoxville):
+    space_count = None
+    if zone in spaces[closest_date]:
+        space_count = spaces[closest_date][zone]
+    rate = None
+    if zone in rates[closest_date]:
+        rate = rates[closest_date][zone]
+    return space_count, rate
 
 
 
@@ -521,13 +529,19 @@ def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
     lease_count = get_lease_count(zone,start_date,end_date)
     if lease_count is None:
         lease_count = 0
-    effective_space_count = get_space_count_and_rate(zone,start_date,end_date)[0] - 0.85*lease_count
+    space_count = get_space_count_and_rate(zone,start_date,end_date)[0]
+    if space_count is not None:
+        effective_space_count = space_count - 0.85*lease_count
 
     hourly_rate = get_hourly_rate(zone,start_date,end_date,start_hour,end_hour)
     non_free_days = parking_days_in_range(start_date,end_date)
     slot_duration = end_hour - start_hour
     assert end_hour > start_hour
-    utilization = revenue/effective_space_count/hourly_rate/non_free_days/slot_duration
+    print("hourly_rate = {}, space_count = {}".format(hourly_rate,space_count))
+    if hourly_rate is None or space_count is None:
+        utilization = None
+    else:
+        utilization = revenue/effective_space_count/hourly_rate/non_free_days/slot_duration
     return utilization, revenue, transaction_count
 
 def load_and_cache_utilization(zone,search_by,start_date,end_date,start_hour,end_hour):
