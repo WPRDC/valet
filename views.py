@@ -538,7 +538,7 @@ def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
     slot_duration = end_hour - start_hour
     assert end_hour > start_hour
     print("hourly_rate = {}, space_count = {}".format(hourly_rate,space_count))
-    if hourly_rate is None or space_count is None:
+    if hourly_rate is None or space_count is None or non_free_days == 0:
         utilization = None
     else:
         utilization = revenue/effective_space_count/hourly_rate/non_free_days/slot_duration
