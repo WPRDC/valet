@@ -90,6 +90,16 @@ def get_zones():
         ]
     return zones
 
+def valid_month_year(month,year):
+    try:
+        month = int(month)
+        year = int(year)
+        return True, month, year
+    except ValueError:
+        #if month in ['', ' ', None] or year in ['', ' ', None]:
+        print("{}/{} is not a complete date.".format(month,year))
+        return False, None, None
+
 def convert_string_to_date(s):
     return datetime.strptime(s, "%Y-%m-%d").date()
 
@@ -566,8 +576,13 @@ def get_features(request):
         start_dt, end_dt, start_date, end_date = quarter_to_datetimes(quarter)
 
     elif search_by == 'month':
-        month = int(request.GET.get('month', None))
-        year = int(request.GET.get('year', None))
+        month = request.GET.get('month', None)
+        year = request.GET.get('year', None)
+
+        valid, month, year = valid_month_year(month,year)
+        if not valid:
+            data = {}
+            return JsonResponse(data)
         # Convert month/year to start_date and end_date
         print("Retrieved zone = '{}' and month/year = '{}/{}'".format(zone,month,year))
 
@@ -640,8 +655,13 @@ def get_dates(request):
             'display_time_range': quarter
         }
     elif search_by == 'month':
-        month = int(request.GET.get('month', None))
-        year = int(request.GET.get('year', None))
+        month = request.GET.get('month', None)
+        year = request.GET.get('year', None)
+
+        valid, month, year = valid_month_year(month,year)
+        if not valid:
+            data = {}
+            return JsonResponse(data)
         # Convert month/year to start_date and end_date
         start_dt, end_dt, start_date, end_date = datetimes_for_month(year,month)
         data = {
@@ -674,8 +694,15 @@ def get_results(request):
         start_date = start_dt.date()
         end_date = end_dt.date()
     elif search_by == 'month':
-        month = int(request.GET.get('month', None))
-        year = int(request.GET.get('year', None))
+        month = request.GET.get('month', None)
+        year = request.GET.get('year', None)
+
+        valid, month, year = valid_month_year(month,year)
+        if not valid:
+            data = {
+                'display_zone': zone,
+            }
+            return JsonResponse(data)
         start_date, end_date = dates_for_month(year,month)
         # end_date is the first day that is not included in the date range.
         # [start_date, end_date)
@@ -739,9 +766,12 @@ def index(request):
     elif search_by == 'month':
         now = datetime.now()
         first_year = 2016
-        years = range(first_year,now.year+1)
+        years = list(range(first_year,now.year+1))
+        years.append(" ")
         initial_year_choices = convert_to_choices(years)
-        initial_month_choices = convert_to_choices(range(1,13))
+        months = list(range(1,13))
+        months.append(" ")
+        initial_month_choices = convert_to_choices(months)
 
         initial_month = initial_d.month
         initial_year = initial_d.year

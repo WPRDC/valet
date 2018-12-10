@@ -31,6 +31,11 @@ td {
         document.getElementById('results').style.display=(bool?'none':'block');
     }
 
+    function reset_month_picker() {
+          $('#id_month').val(" ");
+          $('#id_year').val(" ");
+    }
+
     function replace_selector_with_options(selector,options) {
         var $el = $(selector);
         $el.empty(); // remove old options
@@ -151,6 +156,8 @@ td {
     $("#id_zone").change(regenerate_output);
     $("#id_month").change(regenerate_output);
     $("#id_year").change(regenerate_output);
+
+    $("#date-picker-link").on("click", reset_month_picker);
     hide_results(false);
     </script>
     <script>
@@ -182,8 +189,8 @@ td {
                     <div class = "six columns">
                         <div id="tabs">
                           <ul>
-                            <li><a href="#month-tab">Month picker</a></li>
-                            <li><a href="#date-tab">Date-range picker</a></li>
+                            <li><a href="#month-tab" id="month-picker-link">Month picker</a></li>
+                            <li><a href="#date-tab" id="date-picker-link">Date-range picker</a></li>
                           </ul>
                           <div id="month-tab">
                               <p><span>
