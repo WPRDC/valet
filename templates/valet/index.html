@@ -44,7 +44,16 @@ td {
         var zone = $("#id_zone").val();
         var month = $("#id_month").val();
         var year = $("#id_year").val();
-        var search_by = $("id_search_by").val();
+        var from_date = frompicker.toString('YYYY-MM-DD');
+        var to_date = topicker.toString('YYYY-MM-DD');
+
+        if (document.getElementById("date-tab").getAttribute("aria-hidden") == "false") {
+            var search_by = "date";
+        } else if (document.getElementById("month-tab").getAttribute("aria-hidden") == "false") {
+            var search_by = "month";
+        } else {
+            var search_by = "new mode";
+        }
 
         $.ajax({
         url: 'ajax/get_features/',
@@ -52,7 +61,9 @@ td {
           'zone': zone,
           'month': month,
           'year': year,
-          'search_by': search_by
+          'search_by': search_by,
+          'from_date': from_date,
+          'to_date': to_date
         },
         dataType: 'json',
         success: function (data) {
@@ -134,6 +145,8 @@ td {
 
     $("#id_month").change(refresh_dates);
     $("#id_year").change(refresh_dates);
+    $("#id_month").change(refresh_features);
+    $("#id_year").change(refresh_features);
     $("#id_zone").change(refresh_features);
     $("#id_zone").change(regenerate_output);
     $("#id_month").change(regenerate_output);
@@ -253,6 +266,7 @@ td {
         },
         onSelect: function() {
             refresh_dates();
+            refresh_features();
             regenerate_output();
             topicker.setMinDate(new Date(this.getDate().getTime()+parseInt(0*24*60*60*1000)));
             if(Number(new Date(this.getDate()))>Number(new Date(document.getElementById('todatepicker').value)))
@@ -293,6 +307,7 @@ td {
                 document.getElementById('fromdatepicker').value="";
             }
             refresh_dates();
+            refresh_features();
             regenerate_output();
         },
         parse(dateString, format) {
@@ -304,6 +319,7 @@ td {
             return new Date(year, month, day);
         }
     });
+
     const copyToClipboard = str => {
       const el = document.createElement('textarea');
       el.value = str;
