@@ -199,6 +199,19 @@ var myChart = new Chart(ctx, {
         }]
     },
     options: {
+        tooltips: {
+            mode: 'index',
+            intersect: false,
+            callbacks: {
+                label: function (t, d) {
+                    if (t.datasetIndex === 0) {
+                        return t.yLabel;
+                    } else if (t.datasetIndex === 1) {
+                        return '$' + t.yLabel.toFixed(2);
+                    }
+                }
+            }
+        },
         responsive: true,
         animation: {
             duration: 0
