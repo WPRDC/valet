@@ -26,6 +26,7 @@ td {
 {% block javascript %}
   <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js"></script>
   <script type="text/javascript">
     function hide_results(bool) {
         document.getElementById('results').style.display=(bool?'none':'block');
@@ -144,6 +145,10 @@ td {
             hide_results(false)
             $("#output").html(data.output_table)
             $("#output_zone").html(data.display_zone)
+            // update chart
+            myChart.data.labels = data.chart_ranges;
+            myChart.config.data.datasets[0].data = data.chart_data;
+            myChart.update();
             }
         });
     }
@@ -158,6 +163,7 @@ td {
     $("#id_year").change(regenerate_output);
 
     $("#date-picker-link").on("click", reset_month_picker);
+    regenerate_output();
     hide_results(false);
     </script>
     <script>
@@ -165,6 +171,39 @@ td {
             $( "#tabs" ).tabs();
         } );
     </script>
+<script>
+var ctx = document.getElementById("myChart").getContext('2d');
+var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ["8am-10am", "10am-2pm", "2pm-5pm"],
+        datasets: [{
+            label: 'Transactions',
+            data: [0, 0, 0],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 206, 86, 0.2)'
+            ],
+            borderColor: [
+                'rgba(255,99,132,1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero:true
+                }
+            }]
+        }
+    }
+});
+</script>
 {% endblock %}
 
 {% block content %}
@@ -235,6 +274,13 @@ td {
                 </div>
                 <button onclick="copyTable()">Copy table</button>
                 <button onclick="download('aggregated_results.csv',)">Download CSV</button>
+            </div>
+        </div>
+        <div class ="row">
+            <div class="twelve columns">
+                <div id="chart_a">
+                    <canvas id="myChart" width="400" height="100"></canvas>
+                </div>
             </div>
         </div>
         <P></P>

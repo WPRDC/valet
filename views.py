@@ -709,6 +709,8 @@ def get_results(request):
 
     r_list = []
     set_table(ref_time)
+    chart_ranges = ['8am-10am', '10am-2pm', '2pm-6pm']
+    chart_data = []
     for key in hour_ranges:
         start_hour = hour_ranges[key]['start_hour']
         end_hour = hour_ranges[key]['end_hour']
@@ -717,6 +719,8 @@ def get_results(request):
         #r_list.append(results_dict)
         row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'])
         r_list.append( row )
+        if key in chart_ranges:
+            chart_data.append(r_dict['transaction_count'])
     clear_table(ref_time)
 
     #result = any(p['id'] == dataset_id for p in rlist)
@@ -729,11 +733,13 @@ def get_results(request):
     #resource_choices = []
     #for pair in csv_resource_choices(p):
     #   resource_choices.append(pair[::-1])
+
     data = {
         'display_zone': zone,
         'output_table': format_as_table(r_list),
+        'chart_ranges': chart_ranges,
+        'chart_data': chart_data
     }
-
     return JsonResponse(data)
 
 
