@@ -327,14 +327,15 @@ var myChart = new Chart(ctx, {
                 <button onclick="download('aggregated_results.csv',)">Download CSV</button>
             </div>
         </div>
+        <P></P>
         <div class="row">
             <div class="six columns">
-                <h5>Zone/lot features for selected lot</h5>
+                <u><b style="font-size: 110%">Zone/lot features for selected lot</b></u><br>
                 <b>Selected lot:</b> <span id="output_zone">{{ display_zone }}</span><br>
                 <b>Rate:</b> $<span id="rate">{{ zone_features.rate }}</span>/hour, <b>Space count:</b> <span id="spaces">{{ zone_features.spaces }}</span>, <b>Lease count:</b> <span id="leases">{{ zone_features.leases }}</span>
             </div>
             <div class="six columns">
-                <h5>Date range for selected time range</h5>
+                <u><b style="font-size: 110%">Date range for selected time range</b></u><br>
                 <b>Selected range:</b> <span id="selected_time_range">{{ display_time_range }}</span><br>
                 <b>Start datetime:</b> <span id="start_dt">{{ start_dt }}</span><br>
                 <b>End datetime:</b> <span id="end_dt">{{ end_dt }}</span>
