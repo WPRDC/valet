@@ -587,7 +587,12 @@ def get_features(request):
     """
     zone = request.GET.get('zone', None)
     search_by = request.GET.get('search_by', 'month')
-    if search_by == 'quarter':
+    if search_by == 'date':
+        start_dt, end_dt = get_dts_from_date_range(request)
+        start_date = start_dt.date()
+        end_date = end_dt.date()
+
+    elif search_by == 'quarter':
         quarter = request.GET.get('quarter', None)
         # Convert quarter to start_date and end_date
         print("Retrieved zone = '{}' and quarter = '{}'".format(zone,quarter))
