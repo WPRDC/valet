@@ -564,7 +564,7 @@ def load_and_cache_utilization(zone,search_by,start_date,end_date,start_hour,end
 def obtain_table_data(ref_time,search_by,zone,start_date,end_date,hour_ranges):
     r_list = []
     set_table(ref_time)
-    chart_ranges = ['8am-10am', '10am-2pm', '2pm-6pm']
+    chart_ranges = ['8am-10am', '10am-2pm', '2pm-6pm', '6pm-midnight']
     transactions_chart_data = []
     payments_chart_data = []
     for key in hour_ranges:
