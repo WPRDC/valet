@@ -561,6 +561,25 @@ def load_and_cache_utilization(zone,search_by,start_date,end_date,start_hour,end
     ut, rev, transaction_count = calculate_utilization(zone,start_date,end_date,start_hour,end_hour)
     return {'total_payments': rev, 'transaction_count': transaction_count, 'utilization': ut}
 
+def obtain_table_data(ref_time,search_by,zone,start_date,end_date,hour_ranges):
+    r_list = []
+    set_table(ref_time)
+    chart_ranges = ['8am-10am', '10am-2pm', '2pm-6pm']
+    chart_data = []
+    for key in hour_ranges:
+        start_hour = hour_ranges[key]['start_hour']
+        end_hour = hour_ranges[key]['end_hour']
+        r_dict = load_and_cache_utilization(zone,search_by,start_date,end_date,start_hour,end_hour)
+        #results_dict['hour_range'] = key
+        #r_list.append(results_dict)
+        row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'])
+        r_list.append( row )
+        if key in chart_ranges:
+            chart_data.append(r_dict['transaction_count'])
+    clear_table(ref_time)
+
+    return r_list, chart_data, chart_ranges
+
 def get_features(request):
     """
     Look up the space count, lease count, and rate for this combination
@@ -707,33 +726,7 @@ def get_results(request):
         # end_date is the first day that is not included in the date range.
         # [start_date, end_date)
 
-    r_list = []
-    set_table(ref_time)
-    chart_ranges = ['8am-10am', '10am-2pm', '2pm-6pm']
-    chart_data = []
-    for key in hour_ranges:
-        start_hour = hour_ranges[key]['start_hour']
-        end_hour = hour_ranges[key]['end_hour']
-        r_dict = load_and_cache_utilization(zone,search_by,start_date,end_date,start_hour,end_hour)
-        #results_dict['hour_range'] = key
-        #r_list.append(results_dict)
-        row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'])
-        r_list.append( row )
-        if key in chart_ranges:
-            chart_data.append(r_dict['transaction_count'])
-    clear_table(ref_time)
-
-    #result = any(p['id'] == dataset_id for p in rlist)
-    #match = None
-    #for p in rlist:
-    #    if p['id'] == dataset_id:
-    #        match = p
-    #        break
-
-    #resource_choices = []
-    #for pair in csv_resource_choices(p):
-    #   resource_choices.append(pair[::-1])
-
+    r_list, chart_data, chart_ranges = obtain_table_data(ref_time,search_by,zone,start_date,end_date,hour_ranges)
     data = {
         'display_zone': zone,
         'output_table': format_as_table(r_list),
@@ -801,28 +794,13 @@ def index(request):
             'rate': rate,
             'leases': leases}
 
-    results = []
-    set_table(ref_time)
-    for key in hour_ranges:
-        start_hour = hour_ranges[key]['start_hour']
-        end_hour = hour_ranges[key]['end_hour']
-        ut, revenue, transaction_count = calculate_utilization(initial_zone,start_date,end_date,start_hour,end_hour)
-        #results.append( {'hour_range': key, 'total_payments': "{:>12,.2f}".format(revenue), 'transaction_count': transaction_count, 'utilization': "{:.3f}".format(ut)} )
-        #results.append( {'hour_range': key, 'total_payments': revenue, 'transaction_count': transaction_count, 'utilization': ut} )
-        row = format_row(key, revenue, transaction_count, ut)
-        results.append( row )
-    clear_table(ref_time)
-    pprint(results)
-
-    #template = loader.get_template('index.html')
-    #context = {#'output': output,
-    #            'zone_picker': SpaceTimeForm().as_p()}
     if search_by == 'quarter':
         st_form = QuarterSpaceTimeForm()
     elif search_by == 'month':
         st_form = MonthSpaceTimeForm(initial = {'year': initial_year, 'month': initial_month, 'zone': initial_zone})
     #st_form.fields['zone'].initial = ["401 - Downtown 1"]
 
+    results, chart_data, chart_ranges = obtain_table_data(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
     output_table = format_as_table(results)
 
     context = {'zone_picker': st_form.as_p(),
@@ -835,6 +813,8 @@ def index(request):
             'zone_features': zone_features,
             'results': results,
             'output_table': output_table,
+            'chart_ranges': chart_ranges,
+            'chart_data': chart_data,
             'search_by': search_by}
 
     if search_by == 'date':
