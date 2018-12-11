@@ -565,7 +565,8 @@ def obtain_table_data(ref_time,search_by,zone,start_date,end_date,hour_ranges):
     r_list = []
     set_table(ref_time)
     chart_ranges = ['8am-10am', '10am-2pm', '2pm-6pm']
-    chart_data = []
+    transactions_chart_data = []
+    payments_chart_data = []
     for key in hour_ranges:
         start_hour = hour_ranges[key]['start_hour']
         end_hour = hour_ranges[key]['end_hour']
@@ -575,10 +576,11 @@ def obtain_table_data(ref_time,search_by,zone,start_date,end_date,hour_ranges):
         row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'])
         r_list.append( row )
         if key in chart_ranges:
-            chart_data.append(r_dict['transaction_count'])
+            transactions_chart_data.append(r_dict['transaction_count'])
+            payments_chart_data.append(r_dict['total_payments'])
     clear_table(ref_time)
 
-    return r_list, chart_data, chart_ranges
+    return r_list, transactions_chart_data, payments_chart_data, chart_ranges
 
 def get_features(request):
     """
@@ -731,12 +733,14 @@ def get_results(request):
         # end_date is the first day that is not included in the date range.
         # [start_date, end_date)
 
-    r_list, chart_data, chart_ranges = obtain_table_data(ref_time,search_by,zone,start_date,end_date,hour_ranges)
+    r_list, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_data(ref_time,search_by,zone,start_date,end_date,hour_ranges)
     data = {
         'display_zone': zone,
         'output_table': format_as_table(r_list),
         'chart_ranges': chart_ranges,
-        'chart_data': chart_data
+        'transactions_chart_data': transactions_chart_data,
+        'payments_chart_data': payments_chart_data,
+
     }
     return JsonResponse(data)
 
@@ -805,7 +809,7 @@ def index(request):
         st_form = MonthSpaceTimeForm(initial = {'year': initial_year, 'month': initial_month, 'zone': initial_zone})
     #st_form.fields['zone'].initial = ["401 - Downtown 1"]
 
-    results, chart_data, chart_ranges = obtain_table_data(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
+    results, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_data(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
     output_table = format_as_table(results)
 
     context = {'zone_picker': st_form.as_p(),
@@ -819,7 +823,8 @@ def index(request):
             'results': results,
             'output_table': output_table,
             'chart_ranges': chart_ranges,
-            'chart_data': chart_data,
+            'transactions_chart_data': transactions_chart_data,
+            'payments_chart_data': payments_chart_data,
             'search_by': search_by}
 
     if search_by == 'date':

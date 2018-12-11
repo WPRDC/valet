@@ -147,7 +147,8 @@ td {
             $("#output_zone").html(data.display_zone)
             // update chart
             myChart.data.labels = data.chart_ranges;
-            myChart.config.data.datasets[0].data = data.chart_data;
+            myChart.config.data.datasets[0].data = data.transactions_chart_data;
+            myChart.config.data.datasets[1].data = data.payments_chart_data;
             myChart.update();
             }
         });
@@ -178,15 +179,27 @@ var myChart = new Chart(ctx, {
         labels: {% autoescape off %}{{ chart_ranges }}{% endautoescape %},
         datasets: [{
             label: 'Transactions',
-            data: {{ chart_data }},
+            data: {{ transactions_chart_data }},
+            yAxisID: 'y-axis-1',
             backgroundColor:
                 'rgba(54, 162, 235, 0.8)',
             borderColor:
                 'rgba(54, 162, 235, 1)',
             borderWidth: 1
+        },
+        {
+            label: 'Payments',
+            data: {{ payments_chart_data }},
+            yAxisID: 'y-axis-2',
+            backgroundColor:
+                'rgba(235, 162, 54, 0.8)',
+            borderColor:
+                'rgba(235, 162, 54, 1)',
+            borderWidth: 1
         }]
     },
     options: {
+        responsive: true,
         animation: {
             duration: 0
         },
@@ -194,8 +207,23 @@ var myChart = new Chart(ctx, {
             yAxes: [{
                 ticks: {
                     beginAtZero:true
+                },
+                display: true,
+                position: 'left',
+                id: 'y-axis-1',
+            },
+            {
+                ticks: {
+                    beginAtZero:true
+                },
+                display: true,
+                position: 'right',
+                id: 'y-axis-2',
+                gridLines: {
+                    drawOnChartArea: false
                 }
-            }]
+            }
+            ]
         }
     }
 });
