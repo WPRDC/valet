@@ -432,6 +432,7 @@ var myChart = new Chart(ctx, {
                 document.getElementById('todatepicker').value="";
             }
         },
+        keyboardInput: false,
         reposition: true,
         parse(dateString, format) {
             // dateString is the result of `toString` method
@@ -469,6 +470,7 @@ var myChart = new Chart(ctx, {
             refresh_features();
             regenerate_output();
         },
+        keyboardInput: false,
         reposition: true,
         parse(dateString, format) {
             // dateString is the result of `toString` method
