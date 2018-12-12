@@ -422,6 +422,11 @@ var myChart = new Chart(ctx, {
 
             return `${year}-${mm}-${dd}`;
         },
+        onDraw: function() { // Reset the month-picker values
+            // whenever the user clicks on the from-date picker,
+            // invoking the calendar view.
+            reset_month_picker();
+        },
         onSelect: function() {
             refresh_dates();
             refresh_features();
@@ -459,6 +464,11 @@ var myChart = new Chart(ctx, {
             var dd   = ((day > 9)   ? '' : '0') + day;
 
             return `${year}-${mm}-${dd}`;
+        },
+        onDraw: function() { // Reset the month-picker values
+            // whenever the user clicks on the tom-date picker,
+            // invoking the calendar view.
+            reset_month_picker();
         },
         onSelect: function() {
             frompicker.setMaxDate(new Date(this.getDate().getTime()+parseInt(0*24*60*60*1000)));
