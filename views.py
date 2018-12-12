@@ -715,7 +715,7 @@ def get_dts_from_date_range(request):
 
 def get_dates(request):
     """
-    Look up the start_date and end_date for this date range/quarter/month 
+    Look up the start_date and end_date for this date range/quarter/month
     and return them.
     """
     # Note that end_date is the last date (NON-INCLUSIVE) of a date range

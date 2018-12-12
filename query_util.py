@@ -101,7 +101,7 @@ def get_revenue_and_count(ref_time,zone,start_date,end_date,start_hour,end_hour,
     # Two models for getting data:
     # 1) Do a SQL query for all records in the start_date to end_date
     # range, then pare down to the hour range, then sum the results
-    # (getting transaction count and total payments). 
+    # (getting transaction count and total payments).
     # 2) Do a selective SQL query that plucks out data based both on hour range
     # and date range, and then sum the results.
 
@@ -112,18 +112,18 @@ def get_revenue_and_count(ref_time,zone,start_date,end_date,start_hour,end_hour,
     # Caching strategies:
     #   Aggregate by zone and quarter and time range:
     #     A key could be of the form "401 - Downtown | 2018 Q1 | 8am-10am"
-    #     With ~60 zones, there would then be 
+    #     With ~60 zones, there would then be
     #       about 60*5*4*3 = 3600 of these quarterly sums, where transaction
     #                   count and total revenue could each be cached separately.
     #   There would be a few more ultimately to account for the extra time slot
     #   for the Southside, once parking became non-free late there on weekends.
 
-    #   Also caching for extra zones would probably be necessary. 
+    #   Also caching for extra zones would probably be necessary.
     from .credentials import site, ckan_api_key as API_key
     resource_id = get_resource_id(ref_time)
     #make_datastore_public(site,resource_id,API_key)
 
-    # query = 'SELECT * FROM "{}" WHERE zone = \'{}\' AND start >= \'2018-01-01\' AND start < \'2018-04-01\' ORDER BY start DESC LIMIT 3'.format(resource_id,zone)# a working query, 
+    # query = 'SELECT * FROM "{}" WHERE zone = \'{}\' AND start >= \'2018-01-01\' AND start < \'2018-04-01\' ORDER BY start DESC LIMIT 3'.format(resource_id,zone)# a working query,
     # which exactly bins the quarter
 
     start_string = start_date.strftime("%Y-%m-%d") # This should be the first date in the range.
