@@ -787,6 +787,7 @@ def get_results(request):
         if not valid:
             data = {
                 'display_zone': zone,
+                'valid_date_range': False
             }
             return JsonResponse(data)
         start_date, end_date = dates_for_month(year,month)
@@ -800,6 +801,7 @@ def get_results(request):
         'chart_ranges': chart_ranges,
         'transactions_chart_data': transactions_chart_data,
         'payments_chart_data': payments_chart_data,
+        'valid_date_range': True
 
     }
     return JsonResponse(data)

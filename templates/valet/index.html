@@ -161,13 +161,15 @@ td {
         dataType: 'json',
         success: function (data) {
             activate_overlay(false);
-            $("#output").html(data.output_table)
-            $("#output_zone").html(data.display_zone)
-            // update chart
-            myChart.data.labels = data.chart_ranges;
-            myChart.config.data.datasets[0].data = data.transactions_chart_data;
-            myChart.config.data.datasets[1].data = data.payments_chart_data;
-            myChart.update();
+            if (data.valid_date_range) {
+                $("#output").html(data.output_table)
+                $("#output_zone").html(data.display_zone)
+                // update chart
+                myChart.data.labels = data.chart_ranges;
+                myChart.config.data.datasets[0].data = data.transactions_chart_data;
+                myChart.config.data.datasets[1].data = data.payments_chart_data;
+                myChart.update();
+                }
             }
         });
     }
