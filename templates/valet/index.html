@@ -55,6 +55,44 @@ td {
           $('#id_year').val(" ");
     }
 
+    function synthesize_date(last) {
+        var month = ($("#id_month").val());
+        var year = ($("#id_year").val());
+        if (month != ' ') {
+            if (year != ' ') {
+                if (last) {
+                    var d = new Date(year, month, 0);
+                } else {
+                    var d = new Date(year, month-1, 1);
+                }
+                return d.toString('YYYY-MM-DD');
+            }
+        }
+        return ""
+    }
+
+    function set_date_picker() {
+        // Try to get the date range from the month picker.
+        // If successful, set the date picker to use
+        // that date range (from the first of a month
+        // to the end of that month).
+
+        // Running this function is currently
+        // changing datepicker values, which is
+        // trigering regeneration of the results,
+        // which triggers the overlay. Triggering
+        // the overlay is not necessary if the
+        // date range has not changed.
+        from_date = synthesize_date(false);
+        to_date = synthesize_date(true);
+        if ((from_date)) {
+            frompicker.setDate(from_date);
+        }
+        if ((to_date)) {
+            topicker.setDate(to_date);
+        }
+    }
+
     function replace_selector_with_options(selector,options) {
         var $el = $(selector);
         $el.empty(); // remove old options
@@ -183,7 +221,7 @@ td {
     $("#id_month").change(regenerate_output);
     $("#id_year").change(regenerate_output);
 
-    $("#date-picker-link").on("click", reset_month_picker);
+    $("#date-picker-link").on("click", set_date_picker);
     activate_overlay(false);
     </script>
     <script>
