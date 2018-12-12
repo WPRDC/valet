@@ -20,6 +20,20 @@ th {
 td {
     text-align: right;
 }
+
+.overlay {
+  position: relative;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  width: 100%;
+  opacity: 0;
+  transition: .5s ease;
+  background-color: #fff;
+}
+
 </style>
 {% endblock stylesheet %}
 
@@ -30,6 +44,10 @@ td {
   <script type="text/javascript">
     function hide_results(bool) {
         document.getElementById('results').style.display=(bool?'none':'block');
+    }
+
+    function activate_overlay(bool) {
+        document.getElementById('overlay').style.opacity=(bool?0.5:1.0);
     }
 
     function reset_month_picker() {
@@ -129,7 +147,7 @@ td {
             var search_by = "new mode";
         }
 
-        hide_results(true);
+        activate_overlay(true);
         $.ajax({
             url: 'ajax/get_results/',
         data: {
@@ -142,7 +160,7 @@ td {
         },
         dataType: 'json',
         success: function (data) {
-            hide_results(false)
+            activate_overlay(false);
             $("#output").html(data.output_table)
             $("#output_zone").html(data.display_zone)
             // update chart
@@ -164,7 +182,7 @@ td {
     $("#id_year").change(regenerate_output);
 
     $("#date-picker-link").on("click", reset_month_picker);
-    hide_results(false);
+    activate_overlay(false);
     </script>
     <script>
         $( function() {
@@ -311,34 +329,36 @@ var myChart = new Chart(ctx, {
     </div>
     <P>
     <div id="results">
-        <div class="row">
-            <div class="twelve columns">
-                <div id="chart_a">
-                    <canvas id="myChart" width="300" height="50"></canvas>
+        <div id="overlay" class="overlay">
+            <div class="row">
+                <div class="twelve columns">
+                    <div id="chart_a">
+                        <canvas id="myChart" width="300" height="50"></canvas>
+                    </div>
+                </div>
+                <div class="twelve columns">
+                    <div id="output">
+                        {% autoescape off %}
+                        {{ output_table }}
+                        {% endautoescape %}
+                    </div>
+                    <button onclick="copyTable()">Copy table</button>
+                    <button onclick="download('aggregated_results.csv',)">Download CSV</button>
                 </div>
             </div>
-            <div class="twelve columns">
-                <div id="output">
-                    {% autoescape off %}
-                    {{ output_table }}
-                    {% endautoescape %}
+            <P></P>
+            <div class="row">
+                <div class="six columns">
+                    <u><b style="font-size: 110%">Zone/lot features for selected lot</b></u><br>
+                    <b>Selected lot:</b> <span id="output_zone">{{ display_zone }}</span><br>
+                    <b>Rate:</b> $<span id="rate">{{ zone_features.rate }}</span>/hour, <b>Space count:</b> <span id="spaces">{{ zone_features.spaces }}</span>, <b>Lease count:</b> <span id="leases">{{ zone_features.leases }}</span>
                 </div>
-                <button onclick="copyTable()">Copy table</button>
-                <button onclick="download('aggregated_results.csv',)">Download CSV</button>
-            </div>
-        </div>
-        <P></P>
-        <div class="row">
-            <div class="six columns">
-                <u><b style="font-size: 110%">Zone/lot features for selected lot</b></u><br>
-                <b>Selected lot:</b> <span id="output_zone">{{ display_zone }}</span><br>
-                <b>Rate:</b> $<span id="rate">{{ zone_features.rate }}</span>/hour, <b>Space count:</b> <span id="spaces">{{ zone_features.spaces }}</span>, <b>Lease count:</b> <span id="leases">{{ zone_features.leases }}</span>
-            </div>
-            <div class="six columns">
-                <u><b style="font-size: 110%">Date range for selected time range</b></u><br>
-                <b>Selected range:</b> <span id="selected_time_range">{{ display_time_range }}</span><br>
-                <b>Start datetime:</b> <span id="start_dt">{{ start_dt }}</span><br>
-                <b>End datetime:</b> <span id="end_dt">{{ end_dt }}</span>
+                <div class="six columns">
+                    <u><b style="font-size: 110%">Date range for selected time range</b></u><br>
+                    <b>Selected range:</b> <span id="selected_time_range">{{ display_time_range }}</span><br>
+                    <b>Start datetime:</b> <span id="start_dt">{{ start_dt }}</span><br>
+                    <b>End datetime:</b> <span id="end_dt">{{ end_dt }}</span>
+                </div>
             </div>
         </div>
     </div>
