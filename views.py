@@ -12,7 +12,7 @@ from collections import defaultdict, OrderedDict
 
 from .models import SpaceCount, LeaseCount, LastCached
 from .util import parking_days_in_range, format_as_table, format_row, format_date
-from .query_util import get_revenue_and_count
+from .query_util import get_revenue_and_count, get_revenue_and_count_vectorized
 from .proto_get_revenue import set_table, clear_table
 
 ref_time = 'purchase_time'
@@ -554,12 +554,46 @@ def calculate_utilization(zone,start_date,end_date,start_hour,end_hour):
         utilization = revenue/effective_space_count/hourly_rate/non_free_days/slot_duration
     return utilization, revenue, transaction_count
 
+def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_hours):
+    """Utilization = (Revenue from parking purchases) / { ([# of spots] - 0.85*[# of leases]) * (rate per hour) * (the number of days in the time span where parking is not free) * (duration of slot in hours) }"""
+
+    revenues, transaction_counts = get_revenue_and_count_vectorized(ref_time,zone,start_date,end_date,start_hours,end_hours)
+    lease_count = get_lease_count(zone,start_date,end_date)
+    if lease_count is None:
+        lease_count = 0
+    space_count = get_space_count_and_rate(zone,start_date,end_date)[0]
+    if space_count is not None:
+        effective_space_count = space_count - 0.85*lease_count
+    non_free_days = parking_days_in_range(start_date,end_date)
+
+    utilizations = []
+    for start_hour,end_hour,revenue in zip(start_hours,end_hours,revenues):
+        hourly_rate = get_hourly_rate(zone,start_date,end_date,start_hour,end_hour)
+        slot_duration = end_hour - start_hour
+        assert end_hour > start_hour
+
+        print("hourly_rate = {}, space_count = {}".format(hourly_rate,space_count))
+        if hourly_rate is None or space_count is None or non_free_days == 0:
+            utilizations.append(None)
+        else:
+            utilizations.append(revenue/effective_space_count/hourly_rate/non_free_days/slot_duration)
+
+    return utilizations, revenues, transaction_counts
+
 def load_and_cache_utilization(zone,search_by,start_date,end_date,start_hour,end_hour):
     # Should this instead combine all the hour ranges?
 
     # [ ] This function is not yet doing any caching.
     ut, rev, transaction_count = calculate_utilization(zone,start_date,end_date,start_hour,end_hour)
     return {'total_payments': rev, 'transaction_count': transaction_count, 'utilization': ut}
+
+def vectorized_query(zone,search_by,start_date,end_date,start_hours,end_hours):
+    """A.K.A. load_and_cache_utilization_vectorized; A.K.A. query_all_ranges."""
+    uts, revs, transaction_counts = calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_hours)
+    rows = []
+    for ut, rev, transaction_count in zip(uts,revs,transaction_counts):
+        rows.append({'total_payments': rev, 'transaction_count': transaction_count, 'utilization': ut})
+    return rows
 
 def obtain_table_data(ref_time,search_by,zone,start_date,end_date,hour_ranges):
     r_list = []
@@ -579,6 +613,32 @@ def obtain_table_data(ref_time,search_by,zone,start_date,end_date,hour_ranges):
             transactions_chart_data.append(r_dict['transaction_count'])
             payments_chart_data.append(r_dict['total_payments'])
     clear_table(ref_time)
+
+    return r_list, transactions_chart_data, payments_chart_data, chart_ranges
+
+def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges):
+    r_list = []
+    chart_ranges = ['8am-10am', '10am-2pm', '2pm-6pm', '6pm-midnight']
+    transactions_chart_data = []
+    payments_chart_data = []
+
+    start_hours = []
+    end_hours = []
+    for key in hour_ranges:
+        start_hour = hour_ranges[key]['start_hour']
+        end_hour = hour_ranges[key]['end_hour']
+        start_hours.append(start_hour)
+        end_hours.append(end_hour)
+
+    set_table(ref_time)
+    rows = vectorized_query(zone,search_by,start_date,end_date,start_hours,end_hours)
+    clear_table(ref_time)
+    for key,r_dict in zip(hour_ranges,rows):
+        row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'])
+        r_list.append( row )
+        if key in chart_ranges:
+            transactions_chart_data.append(r_dict['transaction_count'])
+            payments_chart_data.append(r_dict['total_payments'])
 
     return r_list, transactions_chart_data, payments_chart_data, chart_ranges
 
@@ -733,7 +793,7 @@ def get_results(request):
         # end_date is the first day that is not included in the date range.
         # [start_date, end_date)
 
-    r_list, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_data(ref_time,search_by,zone,start_date,end_date,hour_ranges)
+    r_list, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges)
     data = {
         'display_zone': zone,
         'output_table': format_as_table(r_list),
@@ -809,7 +869,7 @@ def index(request):
         st_form = MonthSpaceTimeForm(initial = {'year': initial_year, 'month': initial_month, 'zone': initial_zone})
     #st_form.fields['zone'].initial = ["401 - Downtown 1"]
 
-    results, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_data(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
+    results, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
     output_table = format_as_table(results)
 
     context = {'zone_picker': st_form.as_p(),
