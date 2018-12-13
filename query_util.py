@@ -171,7 +171,6 @@ def get_revenue_and_count_vectorized(ref_time,zone,start_date,end_date,start_hou
     #query = """SELECT SUM(meter_payments) + SUM(mobile_payments) as total_payments, SUM(meter_transactions) + SUM(mobile_transactions) as transaction_count FROM "29f42621-33a7-4122-915d-d4e10d6d83f9" WHERE start >= '2018-06-25' AND start < '2018-06-26'"""
     query = ' UNION '.join(queries)
     query += ' ORDER BY range_order ASC'
-    print("query = {}".format(query))
     data = query_resource(site,query,API_key)
 
     if end_date > datetime.now().date():

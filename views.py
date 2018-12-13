@@ -412,8 +412,7 @@ def get_attributes(kind):
                 else:
                     last_cached.cache_date = datetime.strftime(today, "%Y-%m-%d")
                     last_cached.save()
-    else:
-        print("Using data pulled from local database.")
+    else: # Use data pulled from local database.
         attribute_dicts = []
         for row in table_data:
             if kind in ['spaces', 'rates']:
@@ -550,7 +549,7 @@ def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_ho
         slot_duration = end_hour - start_hour
         assert end_hour > start_hour
 
-        print("hourly_rate = {}, space_count = {}".format(hourly_rate,space_count))
+        #print("hourly_rate = {}, space_count = {}".format(hourly_rate,space_count))
         if hourly_rate is None or space_count is None or non_free_days == 0:
             utilizations.append(None)
         else:
