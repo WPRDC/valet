@@ -3,11 +3,6 @@
 {% block title %}Parking Data Reports{% endblock %}
 
 {% block stylesheet %}
-<!--link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"-->
-<!--link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css"-->
-<!--link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css"-->
-<!--link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.2/normalize.min.css"-->
-<!--link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"-->
 <link rel="stylesheet" type="text/css" href="{% static 'valet/css/skeleton.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'valet/css/normalize.css' %}">
 
@@ -56,10 +51,8 @@ td {
         jquery_ui_css: [
             '//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css'
             ],
-
-		// Here goes a failover example. The first will fail, therefore Fallback JS will load the second!
+		// Here goes a failover example. If the first fails, Fallback JS will load the second!
 		jQuery: [
-			'//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.FAIL_ON_PURPOSE.min.js',
 			'//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js',
 			'//cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js'
 		],
@@ -68,10 +61,7 @@ td {
 			'//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js',
 			'//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js',
 			'//js/loader.js?i=vendor/jquery-ui.min.js'
-		],
-        'ChartJS': [
-            '//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js'
-        ]
+		]
 	}, {
 		// Shim jQuery UI so that it will only load after jQuery has completed!
 		shim: {
@@ -109,8 +99,6 @@ td {
 		// Execute my code that applies to all of my libraries here!
 	});
 </script>
-<!--script src="https://code.jquery.com/jquery-1.12.4.js"></script-->
-<!--script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js"></script>
 <script type="text/javascript">
     function hide_results(bool) {
@@ -472,7 +460,6 @@ var myChart = new Chart(ctx, {
 <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
 <!--script type="text/javascript" href="{% static 'valet/js/pikaday.js' %}"></script-->
 <script>
-
     var frompicker = new Pikaday({
         field: document.getElementById('fromdatepicker'),
         format: 'YYYY-MM-DD',
