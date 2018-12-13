@@ -38,7 +38,6 @@ td {
 
 {% block javascript %}
 <script src="{% static 'valet/js/fallback.min.js' %}"></script>
-// Script block to execute Fallback JS
 <script>
 	// Here we actually invoke Fallback JS to retrieve the following libraries for the page.
 	fallback.load({
@@ -56,7 +55,6 @@ td {
 			'//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js',
 			'//cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js'
 		],
-
 		'jQuery.ui': [
 			'//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js',
 			'//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js',
@@ -464,14 +462,14 @@ var myChart = new Chart(ctx, {
         field: document.getElementById('fromdatepicker'),
         format: 'YYYY-MM-DD',
         toString(date, format) {
-            // you should do formatting based on the passed format,
-            // but we will just return 'D/M/YYYY' for simplicity
+            // This function should do formatting based on the passed format,
+            // but we will just return 'YYYY-MM-DD' for simplicity.
             const day = date.getDate();
             const month = date.getMonth() + 1;
             const year = date.getFullYear();
 
-            var mm   = ((month > 9) ? '' : '0') + month;
-            var dd   = ((day > 9)   ? '' : '0') + day;
+            var mm = ((month > 9) ? '' : '0') + month;
+            var dd = ((day > 9)   ? '' : '0') + day;
 
             return `${year}-${mm}-${dd}`;
         },
@@ -491,7 +489,7 @@ var myChart = new Chart(ctx, {
             }
         },
         keyboardInput: false,
-        reposition: true,
+        reposition: false,
         parse(dateString, format) {
             // dateString is the result of `toString` method
             const parts = dateString.split('/');
@@ -507,14 +505,14 @@ var myChart = new Chart(ctx, {
         field: document.getElementById('todatepicker'),
         format: 'YYYY-MM-DD',
         toString(date, format) {
-            // you should do formatting based on the passed format,
-            // but we will just return 'D/M/YYYY' for simplicity
+            // This function should do formatting based on the passed format,
+            // but we will just return 'YYYY-MM-DD' for simplicity.
             const day = date.getDate();
             const month = date.getMonth() + 1;
             const year = date.getFullYear();
 
-            var mm   = ((month > 9) ? '' : '0') + month;
-            var dd   = ((day > 9)   ? '' : '0') + day;
+            var mm = ((month > 9) ? '' : '0') + month;
+            var dd = ((day > 9)   ? '' : '0') + day;
 
             return `${year}-${mm}-${dd}`;
         },
@@ -534,7 +532,7 @@ var myChart = new Chart(ctx, {
             regenerate_output();
         },
         keyboardInput: false,
-        reposition: true,
+        reposition: false,
         parse(dateString, format) {
             // dateString is the result of `toString` method
             const parts = dateString.split('/');
