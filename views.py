@@ -12,7 +12,7 @@ from collections import defaultdict, OrderedDict
 
 from .models import SpaceCount, LeaseCount, LastCached
 from .util import parking_days_in_range, format_as_table, format_row, format_date
-from .query_util import get_revenue_and_count, get_revenue_and_count_vectorized
+from .query_util import get_revenue_and_count_vectorized
 from .proto_get_revenue import set_table, clear_table
 
 ref_time = 'purchase_time'
