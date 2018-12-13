@@ -3,8 +3,8 @@
 {% block title %}Parking Data Reports{% endblock %}
 
 {% block stylesheet %}
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
+<!--link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"-->
+<!--link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css"-->
 <!--link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css"-->
 <!--link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.2/normalize.min.css"-->
 <!--link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"-->
@@ -50,9 +50,12 @@ td {
 		// Include your stylesheets, this can be an array of stylesheets or a string!
 		//page_css: 'index.css',
 		//global_css: ['public.css', 'members.css'],
-
-		// JavaScript library. THE KEY MUST BE THE LIBRARIES WINDOW VARIABLE!
-		JSON: '//cdnjs.cloudflare.com/ajax/libs/json2/20121008/json2.min.js',
+        pikaday_css: [
+            '//cdn.jsdelivr.net/npm/pikaday/css/pikaday.css'
+            ],
+        jquery_ui_css: [
+            '//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css'
+            ],
 
 		// Here goes a failover example. The first will fail, therefore Fallback JS will load the second!
 		jQuery: [
