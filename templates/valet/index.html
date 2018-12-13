@@ -5,9 +5,12 @@
 {% block stylesheet %}
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
-<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
-<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.2/normalize.min.css">
+<!--link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css"-->
+<!--link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.2/normalize.min.css"-->
 <!--link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"-->
+<link rel="stylesheet" type="text/css" href="{% static 'valet/css/skeleton.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'valet/css/normalize.css' %}">
+
 <style>
 table {
     width: 70%;
@@ -39,10 +42,75 @@ td {
 {% endblock stylesheet %}
 
 {% block javascript %}
-  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js"></script>
-  <script type="text/javascript">
+<script src="{% static 'valet/js/fallback.min.js' %}"></script>
+// Script block to execute Fallback JS
+<script>
+	// Here we actually invoke Fallback JS to retrieve the following libraries for the page.
+	fallback.load({
+		// Include your stylesheets, this can be an array of stylesheets or a string!
+		//page_css: 'index.css',
+		//global_css: ['public.css', 'members.css'],
+
+		// JavaScript library. THE KEY MUST BE THE LIBRARIES WINDOW VARIABLE!
+		JSON: '//cdnjs.cloudflare.com/ajax/libs/json2/20121008/json2.min.js',
+
+		// Here goes a failover example. The first will fail, therefore Fallback JS will load the second!
+		jQuery: [
+			'//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.FAIL_ON_PURPOSE.min.js',
+			'//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js',
+			'//cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js'
+		],
+
+		'jQuery.ui': [
+			'//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js',
+			'//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js',
+			'//js/loader.js?i=vendor/jquery-ui.min.js'
+		],
+        'ChartJS': [
+            '//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js'
+        ]
+	}, {
+		// Shim jQuery UI so that it will only load after jQuery has completed!
+		shim: {
+			'jQuery.ui': ['jQuery']
+		},
+
+		callback: function(success, failed) {
+			// success - object containing all libraries that loaded successfully.
+			// failed - object containing all libraries that failed to load.
+
+			// All of my libraries have finished loading!
+
+			// Execute my code that applies to all of my libraries here!
+		}
+	});
+
+	fallback.ready(['jQuery'], function() {
+		// jQuery Finished Loading
+
+		// Execute my jQuery dependent code here!
+	});
+
+	fallback.ready(['jQuery', 'JSON'], function() {
+		// jQuery and JSON Finished Loading
+
+		// Execute my jQuery + JSON dependent code here!
+	});
+
+	fallback.ready(function() {
+		// All of my libraries have finished loading!
+
+		// Execute my code that applies to all of my libraries here!
+            // In particular, jQueryUI stuff can get caled here.
+        $( function() {
+            $( "#tabs" ).tabs();
+        } );
+	});
+</script>
+<!--script src="https://code.jquery.com/jquery-1.12.4.js"></script-->
+<!--script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js"></script>
+<script type="text/javascript">
     function hide_results(bool) {
         document.getElementById('results').style.display=(bool?'none':'block');
     }
@@ -224,12 +292,7 @@ td {
 
     $("#date-picker-link").on("click", set_date_picker);
     activate_overlay(false);
-    </script>
-    <script>
-        $( function() {
-            $( "#tabs" ).tabs();
-        } );
-    </script>
+</script>
 <script>
 var ctx = document.getElementById("myChart").getContext('2d');
 var myChart = new Chart(ctx, {
