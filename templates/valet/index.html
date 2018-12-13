@@ -94,20 +94,19 @@ td {
 		// Execute my jQuery dependent code here!
 	});
 
-	fallback.ready(['jQuery', 'JSON'], function() {
+	fallback.ready(['jQuery', 'jQuery.ui'], function() {
 		// jQuery and JSON Finished Loading
 
-		// Execute my jQuery + JSON dependent code here!
+		// Execute my jQuery + jQuery.ui dependent code here!
+        $( function() {
+            $( "#tabs" ).tabs();
+        } );
 	});
 
 	fallback.ready(function() {
 		// All of my libraries have finished loading!
 
 		// Execute my code that applies to all of my libraries here!
-            // In particular, jQueryUI stuff can get caled here.
-        $( function() {
-            $( "#tabs" ).tabs();
-        } );
 	});
 </script>
 <!--script src="https://code.jquery.com/jquery-1.12.4.js"></script-->
