@@ -88,6 +88,7 @@ td {
 		// Execute my jQuery + jQuery.ui dependent code here!
         $( function() {
             $("#tabs").tabs();
+            $("#date-tab").css("padding", "0.5rem");
             $("#tabs").css("display", "block");
         } );
 	});
@@ -389,18 +390,17 @@ var myChart = new Chart(ctx, {
                             <li><a href="#date-tab" id="date-picker-link">Date-range picker</a></li>
                           </ul>
                           <div id="month-tab">
-                              <p><span>
+                              <span>
                                     {{ form.year.errors }}
                                     <b>Year:</b>
                                     {{ form.year }}
-                                </span>
-                                &nbsp;
-                                <span>
+                              </span>
+                              &nbsp;
+                              <span>
                                     {{ form.month.errors }}
                                     <b>Month:</b>
                                     {{ form.month }}
-                                </span>
-                              </p>
+                              </span>
                           </div>
                           <div id="date-tab">
                             <div>
