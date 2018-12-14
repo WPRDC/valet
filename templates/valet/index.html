@@ -33,6 +33,46 @@ td {
   background-color: #fff;
 }
 
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 24em;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -12em;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+
+.tooltip .tooltiptext::after {
+  content: " ";
+  position: absolute;
+  top: 100%; /* At the bottom of the tooltip */
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: black transparent transparent transparent;
+}
+
 </style>
 {% endblock stylesheet %}
 
@@ -447,7 +487,7 @@ var myChart = new Chart(ctx, {
                     <b>Rate:</b> $<span id="rate">{{ zone_features.rate }}</span>/hour, <b>Space count:</b> <span id="spaces">{{ zone_features.spaces }}</span>, <b>Lease count:</b> <span id="leases">{{ zone_features.leases }}</span>
                 </div>
                 <div class="six columns">
-                    <u><b style="font-size: 110%">Date range for selected time range</b></u><br>
+                    <u><b style="font-size: 110%">Date range for selected time range</b></u> <span class="tooltip">&#9432;<span class="tooltiptext">Data available {{ transactions_time_range }}.</span></span><br>
                     <b>Selected range:</b> <span id="selected_time_range">{{ display_time_range }}</span><br>
                     <b>Start datetime:</b> <span id="start_dt">{{ start_dt }}</span><br>
                     <b>End datetime:</b> <span id="end_dt">{{ end_dt }}</span>

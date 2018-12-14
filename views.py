@@ -242,6 +242,20 @@ def convert_to_choices(xs):
         choices.append( (zone_code, x) )
     return choices
 
+def get_package_metadata(site,package_id,API_key=None):
+    ckan = ckanapi.RemoteCKAN(site, apikey=API_key)
+    metadata = ckan.action.package_show(id=package_id)
+    return metadata
+
+def source_time_range(ref_time):
+    from .credentials import site, ckan_api_key as API_key, transactions_package_id as package_id
+    metadata = get_package_metadata(site,package_id,API_key)
+    pprint(metadata)
+    if 'temporal_coverage' in metadata:
+        begin_date, end_date = metadata['temporal_coverage'].split('/')
+        return "from {} to {}".format(begin_date, end_date)
+    return None
+
 def get_number_of_rows(site,resource_id,API_key=None):
 # On other/later versions of CKAN it would make sense to use
 # the datastore_info API endpoint here, but that endpoint is
@@ -822,6 +836,7 @@ def index(request):
     results, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
     output_table = format_as_table(results)
 
+    transactions_time_range = source_time_range(ref_time)
     context = {'zone_picker': st_form.as_p(),
             'form': st_form,
             'start_date': format_date(start_date),
@@ -835,7 +850,8 @@ def index(request):
             'chart_ranges': chart_ranges,
             'transactions_chart_data': transactions_chart_data,
             'payments_chart_data': payments_chart_data,
-            'search_by': search_by}
+            'search_by': search_by,
+            'transactions_time_range': transactions_time_range }
 
     if search_by == 'date':
         context['display_time_range'] = "{} through {}".format(start_date, end_date - timedelta(days=1))
