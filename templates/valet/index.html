@@ -44,12 +44,9 @@ td {
 		// Include your stylesheets, this can be an array of stylesheets or a string!
 		//page_css: 'index.css',
 		//global_css: ['public.css', 'members.css'],
-        pikaday_css: [
-            '//cdn.jsdelivr.net/npm/pikaday/css/pikaday.css'
-            ],
         jquery_ui_css: [
             '//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css'
-            ],
+        ],
 		// Here goes a failover example. If the first fails, Fallback JS will load the second!
 		jQuery: [
 			'//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js',
@@ -59,7 +56,10 @@ td {
 			'//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js',
 			'//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js',
 			'//js/loader.js?i=vendor/jquery-ui.min.js'
-		]
+		],
+        pikaday_css: [
+            '//cdn.jsdelivr.net/npm/pikaday/css/pikaday.css'
+        ]
 	}, {
 		// Shim jQuery UI so that it will only load after jQuery has completed!
 		shim: {
