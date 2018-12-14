@@ -87,7 +87,8 @@ td {
 
 		// Execute my jQuery + jQuery.ui dependent code here!
         $( function() {
-            $( "#tabs" ).tabs();
+            $("#tabs").tabs();
+            $("#tabs").css("display", "block");
         } );
 	});
 
@@ -382,7 +383,7 @@ var myChart = new Chart(ctx, {
                         </span>
                     </div>
                     <div class = "six columns">
-                        <div id="tabs">
+                        <div id="tabs" style="display: none;">
                           <ul>
                             <li><a href="#month-tab" id="month-picker-link">Month picker</a></li>
                             <li><a href="#date-tab" id="date-picker-link">Date-range picker</a></li>
