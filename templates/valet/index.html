@@ -136,8 +136,18 @@ td {
 
 	fallback.ready(function() {
 		// All of my libraries have finished loading!
-
 		// Execute my code that applies to all of my libraries here!
+        $("#id_month").change(refresh_dates);
+        $("#id_year").change(refresh_dates);
+        $("#id_month").change(refresh_features);
+        $("#id_year").change(refresh_features);
+        $("#id_zone").change(refresh_features);
+        $("#id_zone").change(regenerate_output);
+        $("#id_month").change(regenerate_output);
+        $("#id_year").change(regenerate_output);
+
+        $("#date-picker-link").on("click", set_date_picker);
+        activate_overlay(false);
 	});
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js"></script>
@@ -312,17 +322,6 @@ td {
         });
     }
 
-    $("#id_month").change(refresh_dates);
-    $("#id_year").change(refresh_dates);
-    $("#id_month").change(refresh_features);
-    $("#id_year").change(refresh_features);
-    $("#id_zone").change(refresh_features);
-    $("#id_zone").change(regenerate_output);
-    $("#id_month").change(regenerate_output);
-    $("#id_year").change(regenerate_output);
-
-    $("#date-picker-link").on("click", set_date_picker);
-    activate_overlay(false);
 </script>
 <script>
 var ctx = document.getElementById("myChart").getContext('2d');
