@@ -604,7 +604,12 @@ def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ran
     rows = vectorized_query(zone,search_by,start_date,end_date,start_hours,end_hours)
     clear_table(ref_time)
     for key,r_dict in zip(hour_ranges,rows):
-        row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'], r_dict['utilization_w_leases'])
+
+        if zone[0] == '3': # This signifies a lot rather than on-street parking:
+            # And lots may have leases.
+            row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'], r_dict['utilization_w_leases'])
+        else:
+            row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'])
         r_list.append( row )
         if key in chart_ranges:
             transactions_chart_data.append(r_dict['transaction_count'])

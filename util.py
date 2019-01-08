@@ -77,9 +77,11 @@ def format_date(d):
 def format_utilization(u):
     return "-" if u is None else "{:.1f}%".format(100*u)
 
-def format_row(hour_range,total_payments,transaction_count,utilization,utilization_w_leases):
+def format_row(hour_range,total_payments,transaction_count,utilization,utilization_w_leases='not passed'):
     revenue = "${:,.2f}".format(total_payments)
-    row = {'hour_range': hour_range, 'total_payments': "{}".format(revenue), 'transaction_count': "{:,}".format(transaction_count), 'utilization': format_utilization(utilization), 'utilization_w_leases': format_utilization(utilization_w_leases)}
+    row = {'hour_range': hour_range, 'total_payments': "{}".format(revenue), 'transaction_count': "{:,}".format(transaction_count), 'utilization': format_utilization(utilization)}
+    if utilization_w_leases != 'not passed':
+        row['utilization_w_leases'] = format_utilization(utilization_w_leases)
     return row
 
 def format_as_table(results):
@@ -102,10 +104,23 @@ def format_as_table(results):
 #    </tr>
 #{% endfor %}
 #</table>
-    t = """<table id="results_table" style="margin-bottom:0.2rem"><thead><tr><th>Hour range\t</th><th>Revenue\t</th><th>Transactions\t</th><th>Utilization\t</th><th>Utilization w/leases\t</th></tr></thead>"""
-    t += "<tbody>"
+    all_keys = []
     for r in results:
-        t += "<tr><td>{}\t</td><td>{}\t</td><td>{}\t</td><td>{}\t</td><td>{}\t</td></tr>".format(r['hour_range'], r['total_payments'], r['transaction_count'], r['utilization'], r['utilization_w_leases'])
+        for key in r.keys():
+            all_keys.append(key)
+
+    extended_format = 'utilization_w_leases' in all_keys
+    if extended_format:
+        t = """<table id="results_table" style="margin-bottom:0.2rem"><thead><tr><th>Hour range\t</th><th>Revenue\t</th><th>Transactions\t</th><th>Utilization\t</th><th>Utilization w/leases\t</th></tr></thead>"""
+    else:
+        t = """<table id="results_table" style="margin-bottom:0.2rem"><thead><tr><th>Hour range\t</th><th>Revenue\t</th><th>Transactions\t</th><th>Utilization\t</th></tr></thead>"""
+    t += "<tbody>"
+
+    for r in results:
+        if extended_format:
+            t += "<tr><td>{}\t</td><td>{}\t</td><td>{}\t</td><td>{}\t</td><td>{}\t</td></tr>".format(r['hour_range'], r['total_payments'], r['transaction_count'], r['utilization'], r['utilization_w_leases'])
+        else:
+            t += "<tr><td>{}\t</td><td>{}\t</td><td>{}\t</td><td>{}\t</td></tr>".format(r['hour_range'], r['total_payments'], r['transaction_count'], r['utilization'])
     t += "</tbody></table>"
 
     return t
