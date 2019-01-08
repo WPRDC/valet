@@ -74,9 +74,12 @@ def parking_days_in_range(start_date,end_date):
 def format_date(d):
     return datetime.strftime(d,"%Y-%m-%d")
 
-def format_row(hour_range,total_payments,transaction_count,utilization):
+def format_utilization(u):
+    return "-" if u is None else "{:.1f}%".format(100*u)
+
+def format_row(hour_range,total_payments,transaction_count,utilization,utilization_w_leases):
     revenue = "${:,.2f}".format(total_payments)
-    row = {'hour_range': hour_range, 'total_payments': "{}".format(revenue), 'transaction_count': "{:,}".format(transaction_count), 'utilization': "-" if utilization is None else "{:.1f}%".format(100*utilization)}
+    row = {'hour_range': hour_range, 'total_payments': "{}".format(revenue), 'transaction_count': "{:,}".format(transaction_count), 'utilization': format_utilization(utilization), 'utilization_w_leases': format_utilization(utilization_w_leases)}
     return row
 
 def format_as_table(results):
@@ -99,10 +102,10 @@ def format_as_table(results):
 #    </tr>
 #{% endfor %}
 #</table>
-    t = """<table id="results_table" style="margin-bottom:0.2rem"><thead><tr><th>Hour range\t</th><th>Revenue\t</th><th>Transactions\t</th><th>Utilization\t</th></tr></thead>"""
+    t = """<table id="results_table" style="margin-bottom:0.2rem"><thead><tr><th>Hour range\t</th><th>Revenue\t</th><th>Transactions\t</th><th>Utilization\t</th><th>Utilization w/leases\t</th></tr></thead>"""
     t += "<tbody>"
     for r in results:
-        t += "<tr><td>{}\t</td><td>{}\t</td><td>{}\t</td><td>{}\t</td></tr>".format(r['hour_range'], r['total_payments'], r['transaction_count'], r['utilization'])
+        t += "<tr><td>{}\t</td><td>{}\t</td><td>{}\t</td><td>{}\t</td><td>{}\t</td></tr>".format(r['hour_range'], r['total_payments'], r['transaction_count'], r['utilization'], r['utilization_w_leases'])
     t += "</tbody></table>"
 
     return t

@@ -557,7 +557,7 @@ def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_ho
         effective_space_count = space_count - 0.85*lease_count
     non_free_days = parking_days_in_range(start_date,end_date)
 
-    utilizations = []
+    utilizations, utilizations_w_leases = [], []
     for start_hour,end_hour,revenue in zip(start_hours,end_hours,revenues):
         hourly_rate = get_hourly_rate(zone,start_date,end_date,start_hour,end_hour)
         slot_duration = end_hour - start_hour
@@ -566,17 +566,24 @@ def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_ho
         #print("hourly_rate = {}, space_count = {}".format(hourly_rate,space_count))
         if hourly_rate is None or space_count is None or non_free_days == 0:
             utilizations.append(None)
+            utilizations_w_leases.append(None)
         else:
-            utilizations.append(revenue/effective_space_count/hourly_rate/non_free_days/slot_duration)
+            ut = revenue/effective_space_count/hourly_rate/non_free_days/slot_duration
+            utilizations.append(ut)
+            if start_hour < 8 or start_hour >= 18: # This excludes the "total" slot (from hour 0 to hour 24)?
+                total_ut = None
+            else:
+                total_ut = (ut*effective_space_count + 0.85*lease_count)/space_count
+            utilizations_w_leases.append(total_ut)
 
-    return utilizations, revenues, transaction_counts
+    return utilizations, utilizations_w_leases, revenues, transaction_counts
 
 def vectorized_query(zone,search_by,start_date,end_date,start_hours,end_hours):
     """A.K.A. load_and_cache_utilization_vectorized; A.K.A. query_all_ranges."""
-    uts, revs, transaction_counts = calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_hours)
+    uts, uts_w_leases, revs, transaction_counts = calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_hours)
     rows = []
-    for ut, rev, transaction_count in zip(uts,revs,transaction_counts):
-        rows.append({'total_payments': rev, 'transaction_count': transaction_count, 'utilization': ut})
+    for ut, ut_w_leases, rev, transaction_count in zip(uts,uts_w_leases,revs,transaction_counts):
+        rows.append({'total_payments': rev, 'transaction_count': transaction_count, 'utilization': ut, 'utilization_w_leases': ut_w_leases})
     return rows
 
 def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges):
@@ -597,7 +604,7 @@ def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ran
     rows = vectorized_query(zone,search_by,start_date,end_date,start_hours,end_hours)
     clear_table(ref_time)
     for key,r_dict in zip(hour_ranges,rows):
-        row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'])
+        row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'], r_dict['utilization_w_leases'])
         r_list.append( row )
         if key in chart_ranges:
             transactions_chart_data.append(r_dict['transaction_count'])
