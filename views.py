@@ -570,7 +570,7 @@ def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_ho
         else:
             ut = revenue/effective_space_count/hourly_rate/non_free_days/slot_duration
             utilizations.append(ut)
-            if start_hour < 8 or start_hour >= 18: # This excludes the "total" slot (from hour 0 to hour 24)?
+            if start_hour < 8 or start_hour >= 18: # This excludes the "total" slot (from hour 0 to hour 24).
                 total_ut = None
             else:
                 total_ut = (ut*effective_space_count + 0.85*lease_count)/space_count
@@ -605,11 +605,12 @@ def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ran
     clear_table(ref_time)
     for key,r_dict in zip(hour_ranges,rows):
 
-        if zone[0] == '3': # This signifies a lot rather than on-street parking:
-            # And lots may have leases.
-            row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'], r_dict['utilization_w_leases'])
-        else:
-            row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'])
+        #if zone[0] == '3': # This signifies a lot rather than on-street parking:
+        #    # And lots may have leases.
+        #    row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'], r_dict['utilization_w_leases'])
+        #else:
+        #    row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], r_dict['utilization'])
+        row = format_row(key, r_dict['total_payments'], r_dict['transaction_count'], None, r_dict['utilization_w_leases'])
         r_list.append( row )
         if key in chart_ranges:
             transactions_chart_data.append(r_dict['transaction_count'])
