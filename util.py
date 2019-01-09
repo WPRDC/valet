@@ -111,9 +111,9 @@ def format_as_table(results):
 
     extended_format = 'utilization_w_leases' in all_keys
     if extended_format:
-        t = """<table id="results_table" style="margin-bottom:0.2rem"><thead><tr><th>Hour range\t</th><th>Revenue\t</th><th>Transactions\t</th><th>Utilization\t</th><th>Utilization w/leases\t</th></tr></thead>"""
+        t = """<table id="results_table" style="margin-bottom:0.2rem"><thead><tr><th>Hour range\t</th><th>Transient<br>revenue\t</th><th>Transactions\t</th><th>Utilization\t</th><th>Utilization w/leases\t</th></tr></thead>"""
     else:
-        t = """<table id="results_table" style="margin-bottom:0.2rem"><thead><tr><th>Hour range\t</th><th>Revenue\t</th><th>Transactions\t</th><th>Utilization\t</th></tr></thead>"""
+        t = """<table id="results_table" style="margin-bottom:0.2rem"><thead><tr><th>Hour range\t</th><th>Transient<br>revenue\t</th><th>Transactions\t</th><th>Utilization\t</th></tr></thead>"""
     t += "<tbody>"
 
     for r in results:
