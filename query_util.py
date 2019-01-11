@@ -137,7 +137,7 @@ def get_revenue_and_count_vectorized(ref_time,zone,start_date,end_date,start_hou
     if zone is None: # This part deviates from the original proto_get_revenue.py, though it's an improvement.
         k = 0
         for start_hour,end_hour in zip(start_hours,end_hours):
-            query = 'SELECT {} as col_order, SUM(meter_payments) + SUM(mobile_payments) as total_payments, SUM(meter_transactions) + SUM(mobile_transactions) as transaction_count FROM "{}" WHERE start >= \'{}\' AND start < \'{}\' AND extract(hour from start) >= {} and extract(hour from start) < {}'.format(k,resource_id,start_string,end_string,start_hour,end_hour)
+            query = 'SELECT {} as col_order, SUM(meter_payments) + SUM(mobile_payments) as total_payments, SUM(meter_transactions) + SUM(mobile_transactions) as transaction_count FROM "{}" WHERE start >= \'{}\' AND start < \'{}\' AND extract(hour from start) >= {} AND extract(hour from start) < {}'.format(k,resource_id,start_string,end_string,start_hour,end_hour)
             # This will definitely fail for extract(hour from start) >= 1 and extract(hour from start) <= 1
             #     though it might work for the designed cases (valet),
             #          but it seems like it doesn't and is somehow giving twice the expected results.
@@ -146,7 +146,7 @@ def get_revenue_and_count_vectorized(ref_time,zone,start_date,end_date,start_hou
     else:
         k = 0
         for start_hour,end_hour in zip(start_hours,end_hours):
-            query = 'SELECT {} as range_order, SUM(meter_payments) + SUM(mobile_payments) as total_payments, SUM(meter_transactions) + SUM(mobile_transactions) as transaction_count FROM "{}" WHERE zone = \'{}\' AND start >= \'{}\' AND start < \'{}\' AND extract(hour from start) >= {} and extract(hour from start) < {}'.format(k,resource_id,zone,start_string,end_string,start_hour,end_hour)
+            query = 'SELECT {} as range_order, SUM(meter_payments) + SUM(mobile_payments) as total_payments, SUM(meter_transactions) + SUM(mobile_transactions) as transaction_count FROM "{}" WHERE zone = \'{}\' AND start >= \'{}\' AND start < \'{}\' AND extract(hour from start) >= {} AND extract(hour from start) < {}'.format(k,resource_id,zone,start_string,end_string,start_hour,end_hour)
             queries.append(query)
             k += 1
 
