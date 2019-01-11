@@ -97,17 +97,15 @@ def get_minizones():
     minizones = [
         "Hill District",
         "HILL-DIST-2",
+        "S. Craig",
         "SHADYSIDE1",
         "SHADYSIDE2",
+        "Southside Lots",
         "SQ.HILL1",
         "SQ.HILL2",
         "UPTOWN1",
         "UPTOWN2",
         "W CIRC DR",
-        "East Liberty (On-street only)",
-        "Marathon/CMU",
-        "S. Craig",
-        "Southside Lots",
         ]
     return minizones
 
