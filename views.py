@@ -256,12 +256,19 @@ def get_quarter_choices():
 
     return choices
 
+def alias(x):
+    aliases = {'HILL-DIST-2': 'HILL-DIST-2 [Robinson St Ext]',
+            'SHADYSIDE1': 'SHADYSIDE1 [Walnut St]'}
+    if x in aliases:
+        return aliases[x]
+    return x
+
 def convert_to_choices(xs):
     choices = []
     for x in xs:
         #zone_code = re.sub(" - .*","",str(x))
-        zone_code = x
-        choices.append( (zone_code, x) )
+        zone_code = alias(x)
+        choices.append( (x, zone_code) )
     return choices
 
 def get_package_metadata(site,package_id,API_key=None):
