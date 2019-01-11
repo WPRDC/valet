@@ -27,7 +27,7 @@ hour_ranges = OrderedDict([('midnight-8am', {'start_hour': 0, 'end_hour': 8}),
 # [ ] Add final hour range/ranges for the Southside (maybe picking only particular days, so a different query might be needed).
 
 def get_zones():
-    zones = ["301 - Sheridan Harvard Lot",
+    regular_zones = ["301 - Sheridan Harvard Lot",
         "302 - Sheridan Kirkwood Lot",
         "304 - Tamello Beatty Lot",
         "307 - Eva Beatty Lot",
@@ -88,7 +88,31 @@ def get_zones():
         "426 - Hill District",
         "427 - Knoxville" # [ ] There's no data for this one yet.
         ]
+    minizones = get_minizones()
+    zones = regular_zones + minizones
     return zones
+
+def get_minizones():
+    # Hard-coding these minizones is only a temporary solution.
+    minizones = [
+        "Hill District",
+        "HILL-DIST-2",
+        "SHADYSIDE1",
+        "SHADYSIDE2",
+        "SQ.HILL1",
+        "SQ.HILL2",
+        "UPTOWN1",
+        "UPTOWN2",
+        "W CIRC DR",
+        "East Liberty (On-street only)",
+        "Marathon/CMU",
+        "S. Craig",
+        "Southside Lots",
+        ]
+    return minizones
+
+def is_minizone(zone):
+    return zone in get_minizones()
 
 def valid_month_year(month,year):
     try:
@@ -545,10 +569,10 @@ def get_hourly_rate(zone,start_date,end_date,start_hour,end_hour):
     space_count, hourly_rate = get_space_count_and_rate(zone,start_date,end_date)
     return hourly_rate
 
-def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_hours):
+def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_hours,is_a_minizone):
     """Utilization = (Revenue from parking purchases) / { ([# of spots] - 0.85*[# of leases]) * (rate per hour) * (the number of days in the time span where parking is not free) * (duration of slot in hours) }"""
 
-    revenues, transaction_counts = get_revenue_and_count_vectorized(ref_time,zone,start_date,end_date,start_hours,end_hours)
+    revenues, transaction_counts = get_revenue_and_count_vectorized(ref_time,zone,start_date,end_date,start_hours,end_hours,is_a_minizone)
     lease_count = get_lease_count(zone,start_date,end_date)
     if lease_count is None:
         lease_count = 0
@@ -578,9 +602,9 @@ def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_ho
 
     return utilizations, utilizations_w_leases, revenues, transaction_counts
 
-def vectorized_query(zone,search_by,start_date,end_date,start_hours,end_hours):
+def vectorized_query(zone,search_by,start_date,end_date,start_hours,end_hours,is_a_minizone):
     """A.K.A. load_and_cache_utilization_vectorized; A.K.A. query_all_ranges."""
-    uts, uts_w_leases, revs, transaction_counts = calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_hours)
+    uts, uts_w_leases, revs, transaction_counts = calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_hours,is_a_minizone)
     rows = []
     for ut, ut_w_leases, rev, transaction_count in zip(uts,uts_w_leases,revs,transaction_counts):
         rows.append({'total_payments': rev, 'transaction_count': transaction_count, 'utilization': ut, 'utilization_w_leases': ut_w_leases})
@@ -600,9 +624,11 @@ def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ran
         start_hours.append(start_hour)
         end_hours.append(end_hour)
 
-    set_table(ref_time)
-    rows = vectorized_query(zone,search_by,start_date,end_date,start_hours,end_hours)
-    clear_table(ref_time)
+
+    is_a_minizone = is_minizone(zone)
+    set_table(ref_time,is_a_minizone)
+    rows = vectorized_query(zone,search_by,start_date,end_date,start_hours,end_hours,is_a_minizone)
+    clear_table(ref_time,is_a_minizone)
     for key,r_dict in zip(hour_ranges,rows):
 
         #if zone[0] == '3': # This signifies a lot rather than on-street parking:

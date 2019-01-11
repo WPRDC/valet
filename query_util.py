@@ -77,13 +77,18 @@ def find_resource_id(site,package_id,resource_name,API_key=None):
             return r['id']
     return None
 
-def get_resource_id(ref_time):
+def get_resource_id(ref_time,is_a_minizone):
     by_name = True
     if ref_time == 'hybrid':
         from .credentials import transactions_resource_id as resource_id
     elif ref_time == 'purchase_time':
         if by_name:
             from .credentials import site, ckan_api_key as API_key, transactions_package_id as package_id, resource_name
+            from .credentials import site, ckan_api_key as API_key, debug_package_id as package_id, resource_name
+            if is_a_minizone:
+                from .credentials import minizones_resource_name as resource_name
+                print("Using data from resource with name {} and package ID {}.".format(resource_name,package_id))
+
             resource_id = find_resource_id(site,package_id,resource_name,API_key)
             if resource_id is None:
                 raise ValueError("No resource found for package ID = {}, resource name = {}.".format(package_id,resource_name))
@@ -96,7 +101,7 @@ def get_resource_id(ref_time):
         raise ValueError("ref_time must specify the reference time to determine the correct resource ID.")
     return resource_id
 
-def get_revenue_and_count_vectorized(ref_time,zone,start_date,end_date,start_hours,end_hours):
+def get_revenue_and_count_vectorized(ref_time,zone,start_date,end_date,start_hours,end_hours,is_a_minizone=False):
     # Two models for getting data:
     # 1) Do a SQL query for all records in the start_date to end_date
     # range, then pare down to the hour range, then sum the results
@@ -119,7 +124,7 @@ def get_revenue_and_count_vectorized(ref_time,zone,start_date,end_date,start_hou
 
     #   Also caching for extra zones would probably be necessary.
     from .credentials import site, ckan_api_key as API_key
-    resource_id = get_resource_id(ref_time)
+    resource_id = get_resource_id(ref_time,is_a_minizone)
     #make_datastore_public(site,resource_id,API_key)
 
     start_string = start_date.strftime("%Y-%m-%d") # This should be the first date in the range.
