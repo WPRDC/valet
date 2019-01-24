@@ -402,11 +402,15 @@ var myChart = new Chart(ctx, {
 {% block content %}
 <div class="container">
     <div class="row">
-        <div class="ten columns">
+        <div class="nine columns">
             <b style="font-size: 130%">Pittsburgh Parking Authority Reports: Lots and Metered Parking</b>
         </div>
-        <div class="two columns">
-            <div style="font-size: 90%"><a href="https://data.wprdc.org/organization/ppa">Source data</a></div>
+        <div class="three columns">
+            <div>
+                <div style="margin-top:2rem">
+                <span style="font-size: 90%"><a href="https://www.wprdc.org"><img src="img/black_wprdc_logo.svg" alt="[WPRDC]" height="50rem" width="auto" max-width="200px">
+                <a href="https://data.wprdc.org/organization/ppa">Source data</a></span>
+            </div>
         </div>
     </div>
     <div class="row" style="column-rule-style: dashed;">
@@ -416,7 +420,7 @@ var myChart = new Chart(ctx, {
 
                 {{ form.non_field_errors }}
                 <div class="fieldWrapper">
-                    <div class = "six columns">
+                    <div class="six columns">
                         <span>
                             {{ form.zone.errors }}
                             <b>Zone:</b>
