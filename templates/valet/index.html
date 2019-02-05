@@ -193,6 +193,20 @@ td {
         // which triggers the overlay. Triggering
         // the overlay is not necessary if the
         // date range has not changed.
+        // ACTUALLY, the regeneration of the
+        // results triggered by the datepickers
+        // is not keeping up with changes to
+        // the dates resulting from set_date_picker,
+        // so I've added some forced refreshes
+        // at the end of this function.
+        // The datepicker-triggered regeneration
+        // is causing a bit of a glitch before
+        // the regenerations below catch up.
+
+        // ALSO, the dates set by set_date_picker
+        // are sometimes wrong, but at least
+        // they're now reflected in the output
+        // shown on the browser.
         from_date = synthesize_date(false);
         to_date = synthesize_date(true);
         if ((from_date)) {
@@ -200,6 +214,11 @@ td {
         }
         if ((to_date)) {
             topicker.setDate(to_date);
+        }
+        if ((from_date) || (to_date)) {
+            refresh_dates();
+            refresh_features();
+            regenerate_output();
         }
     }
 
