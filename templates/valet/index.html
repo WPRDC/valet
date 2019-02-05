@@ -421,14 +421,21 @@ var myChart = new Chart(ctx, {
 {% block content %}
 <div class="container">
     <div class="row">
-        <div class="nine columns">
-            <b style="font-size: 130%">Pittsburgh Parking Authority Reports: Lots and Metered Parking</b>
+        <div class="eight columns">
+            <b style="font-size: 130%">Pittsburgh Parking Authority: Lots and Metered Parking</b>
         </div>
-        <div class="three columns">
+        <div class="two columns">
             <div>
                 <div style="margin-top:2rem">
-                <span style="font-size: 90%"><a href="https://www.wprdc.org"><img src="img/black_wprdc_logo.svg" alt="[WPRDC]" height="50rem" width="auto" max-width="200px">
-                <a href="https://data.wprdc.org/organization/ppa">Source data</a></span>
+                    <a href="http://www.pittsburghparking.com"><img src="{%static 'valet/img/ppa-logo.gif' %}" alt="[Pittsburgh Parking Authority]" height="60rem" width="auto" max-width="200px">
+                </div>
+            </div>
+        </div>
+        <div class="two columns">
+            <div>
+                <div style="margin-top:2rem">
+                    <a href="https://www.wprdc.org"><img src="{% static 'valet/img/black_wprdc_logo.svg' %}" alt="[WPRDC]" height="40rem" width="auto" max-width="200px"></a>
+                </div>
             </div>
         </div>
     </div>
@@ -500,6 +507,8 @@ var myChart = new Chart(ctx, {
                     </div>
                     <button onclick="copyTable()">Copy table</button>
                     <button onclick="download('aggregated_results.csv',)">Download CSV</button>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <span style="font-size: 90%"><a href="https://data.wprdc.org/organization/ppa">Source data</a></span>
                 </div>
             </div>
             <P></P>
