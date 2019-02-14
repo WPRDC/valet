@@ -404,10 +404,10 @@ def get_attributes(kind):
         raise ValueError("attribute kind = {} not found".format(kind))
 
     today = datetime.now().date()
-    if len(table_data) == 0 or (last_cached is not None and (today - last_cached_date > timedelta(days=3))):
+    if len(table_data) == 0 or (last_cached is not None and (today - last_cached_date > timedelta(days=1))):
         # Build/refresh cache
-        print("Pulling and caching data.")
         attribute_dicts = get_all_records(site, resource_id, API_key)
+        print("Pulling and caching data. {} records found.".format(len(attribute_dicts)))
         # Cache data in the corresponding table.
         if kind in ['spaces', 'rates']:
             for a in attribute_dicts:
