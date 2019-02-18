@@ -73,6 +73,22 @@ td {
     border-color: black transparent transparent transparent;
 }
 
+span.formula {
+    font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
+    color: black;
+}
+
+div.formula {
+    font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
+    color: black;
+    margin-left: 2em;
+    margin-top: 0em;
+    margin-bottom: 0em;
+    margin-block-start: 0em;
+    margin-block-end: 0em;
+}
+
+
 </style>
 {% endblock stylesheet %}
 
@@ -505,10 +521,42 @@ var myChart = new Chart(ctx, {
                         {{ output_table }}
                         {% endautoescape %}
                     </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="twelve columns">
                     <button onclick="copyTable()">Copy table</button>
                     <button onclick="download('aggregated_results.csv',)">Download CSV</button>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    <span style="font-size: 90%"><a href="https://data.wprdc.org/organization/ppa">Source data</a></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="eight columns">
+                    <details>
+                        <summary>About these calculations</summary>
+                        <p>A utilization metric can be calculated to estimate the level of parking purchases in a given time interval.
+                        <br>
+                        <br>
+                        As this utilization calculation is based only on the time at which parking is purchased, <b>it does not represent a good estimation of the occupancy of a particular lot or zone</b>. (Specifically, if someone pays at 8am for four hours of parking, all of that revenue is counted in the 8am-10am slot in this calculation, even though a parking space was paid for through noon.)
+                        <br>
+                        <br>
+                        The formula used for calculating utilization is
+                        <div class="formula">Utilization = (Revenue from parking purchases during time slot) / (Revenue if all spaces are paid for during time slot)</div>
+                        <br>
+                        <b>Transient</b> utilization (utilization excluding lease revenue and spaces) would be
+                        <div class="formula">(Revenue from parking during time slot) / { (space_count - 0.85&times;lease_count) &times; (rate per hour) &times; (the number of days in the time span where parking is not free) &times; (duration of time slot in hours) }</div>
+                        <br>
+                        Here we assume 85% occupancy of leased spaces as a reasonable estimate. <span class="formula">(space_count - 0.85&times;lease_count)</span> is an effective space count (the number of parking spaces expected to be available for everyday purchase). By adding in the lease utilization, we can calculate the total utilization:
+                        <div class="formula">Utilization = ([Transient utilization]&times;[effective space count] + 0.85&times;lease_count)/space_count</div>
+                        <div class="formula">&nbsp;&nbsp;&nbsp;&nbsp;= (Revenue from parking purchases during time slot) / { space_count &times; (rate per hour) &times; (the number of days in the time span where parking is not free) &times; (duration of slot in hours) }
+                            <br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ 0.85&times;lease_count/space_count</div>
+                        or more concisely:
+                        <div class="formula">Utilization = revenue / (space_count &times; rate &times; days &times; hours) + 0.85&times;lease_count/space_count</div>
+
+                        <br>
+                        The source data can be found <a href="https://data.wprdc.org/organization/ppa">here</a>.
+                        </p>
+                    </details>
                 </div>
             </div>
             <P></P>
