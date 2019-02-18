@@ -279,7 +279,6 @@ def get_package_metadata(site,package_id,API_key=None):
 def source_time_range(ref_time):
     from .credentials import site, ckan_api_key as API_key, transactions_package_id as package_id
     metadata = get_package_metadata(site,package_id,API_key)
-    pprint(metadata)
     if 'temporal_coverage' in metadata:
         begin_date, end_date = metadata['temporal_coverage'].split('/')
         return "from {} to {}".format(begin_date, end_date)
@@ -362,7 +361,7 @@ def get_all_records(site,resource_id,API_key=None,chunk_size=5000):
         # this step:
         #row_count = get_number_of_rows(site,resource_id,API_key)
         k += 1
-        print("{} iterations, {} failures, {} records, {} total records".format(k,failures,len(records),len(all_records)))
+        print("{} iterations, {} failures, {} records, {} total records (resource ID = {})".format(k,failures,len(records),len(all_records),resource_id))
 
         # Another option for iterating through the records of a resource would be to
         # just iterate through using the _links results in the API response:
@@ -580,7 +579,14 @@ def get_hourly_rate(zone,start_date,end_date,start_hour,end_hour):
     return hourly_rate
 
 def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_hours,is_a_minizone):
-    """Utilization = (Revenue from parking purchases) / { ([# of spots] - 0.85*[# of leases]) * (rate per hour) * (the number of days in the time span where parking is not free) * (duration of slot in hours) }"""
+    """Transient utilization = (Revenue from parking purchases) / { ([# of spots] - 0.85*[# of leases]) * (rate per hour) * (the number of days in the time span where parking is not free) * (duration of slot in hours) }
+
+   Total utilization =  (ut*effective_space_count + 0.85*lease_count)/space_count
+    = (Revenue from parking purchases) / { [# of spaces] * (rate per hour) * (the number of days in the time span where parking is not free) * (duration of slot in hours) }
+      + 0.85 * [# of leases]/[# of spaces]
+    or more concisely:
+    = revenue / (space_count * rate * days * hours) + 0.85*lease_count/space_count
+    """
 
     revenues, transaction_counts = get_revenue_and_count_vectorized(ref_time,zone,start_date,end_date,start_hours,end_hours,is_a_minizone)
     lease_count = get_lease_count(zone,start_date,end_date)
