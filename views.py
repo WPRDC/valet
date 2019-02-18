@@ -578,6 +578,9 @@ def get_hourly_rate(zone,start_date,end_date,start_hour,end_hour):
     space_count, hourly_rate = get_space_count_and_rate(zone,start_date,end_date)
     return hourly_rate
 
+def utilization_formula(revenue,effective_space_count,hourly_rate,non_free_days,slot_duration):
+    return revenue/effective_space_count/hourly_rate/non_free_days/slot_duration
+
 def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_hours,is_a_minizone):
     """Transient utilization = (Revenue from parking purchases) / { ([# of spots] - 0.85*[# of leases]) * (rate per hour) * (the number of days in the time span where parking is not free) * (duration of slot in hours) }
 
@@ -608,15 +611,37 @@ def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_ho
             utilizations.append(None)
             utilizations_w_leases.append(None)
         else:
-            ut = revenue/effective_space_count/hourly_rate/non_free_days/slot_duration
+            ut = utilization_formula(revenue,effective_space_count,hourly_rate,non_free_days,slot_duration)
             utilizations.append(ut)
-            if start_hour < 8 or start_hour >= 18: # This excludes the "total" slot (from hour 0 to hour 24).
+            #if start_hour < 8 or start_hour >= 18: # This excludes the "total" slot (from hour 0 to hour 24).
+            if start_hour >= 18: # This excludes the "total" slot (from hour 0 to hour 24).
                 total_ut = None
             else:
                 total_ut = (ut*effective_space_count + 0.85*lease_count)/space_count
             utilizations_w_leases.append(total_ut)
 
-    return utilizations, utilizations_w_leases, revenues, transaction_counts
+
+    # The calculations below collect all revenue from before 8am and move it into the 
+    # 8am-10am slot to allow a more representative 8am-10am utilization to be calculated.
+    reshaped_total_utilizations = []
+    morning_revenue = 0
+    for start_hour,end_hour,revenue in zip(start_hours,end_hours,revenues):
+        if 0 <= start_hour < 8 and end_hour <= 8:
+            morning_revenue += revenue
+
+    for start_hour,end_hour,total_ut in zip(start_hours,end_hours,utilizations_w_leases):
+        hourly_rate = get_hourly_rate(zone,start_date,end_date,start_hour,end_hour)
+        slot_duration = end_hour - start_hour
+        if 0 <= start_hour < 8 and end_hour <= 8:
+            u = None
+        elif start_hour == 8:
+            morning_utilization = utilization_formula(morning_revenue,effective_space_count,hourly_rate,non_free_days,slot_duration)
+            u = morning_utilization + total_ut
+        else:
+            u = total_ut
+        reshaped_total_utilizations.append(u)
+
+    return utilizations, reshaped_total_utilizations, revenues, transaction_counts
 
 def vectorized_query(zone,search_by,start_date,end_date,start_hours,end_hours,is_a_minizone):
     """A.K.A. load_and_cache_utilization_vectorized; A.K.A. query_all_ranges."""

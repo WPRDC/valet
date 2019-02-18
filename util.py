@@ -109,7 +109,13 @@ def format_as_table(results):
     t += "<tbody>"
 
     for r in results:
-        t += "<tr><td>{}\t</td><td>{}\t</td><td>{}\t</td><td>{}\t</td></tr>".format(r['hour_range'], r['total_payments'], r['transaction_count'], r['utilization_w_leases'])
+        if r['hour_range'] == '8am-10am':
+            pre_utilization = "<b>"
+            post_utilization = "*</b>"
+        else:
+            pre_utilization = ""
+            post_utilization = ""
+        t += "<tr><td>{}\t</td><td>{}\t</td><td>{}\t</td><td>{}{}{}\t</td></tr>".format(r['hour_range'], r['total_payments'], r['transaction_count'], pre_utilization,r['utilization_w_leases'],post_utilization)
     t += "</tbody></table>"
 
     return t
