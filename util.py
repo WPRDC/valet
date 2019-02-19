@@ -84,7 +84,7 @@ def format_row(hour_range,total_payments,transaction_count,utilization,utilizati
         row['utilization_w_leases'] = format_utilization(utilization_w_leases)
     return row
 
-def format_as_table(results,zone):
+def format_as_table(results,zone,show_utilization):
     """To simplify piping new results via AJAX, use Python to generate the
     table and then send that to the appropriate div."""
 # The original Jinja template looked like this:
