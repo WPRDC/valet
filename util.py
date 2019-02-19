@@ -105,7 +105,10 @@ def format_as_table(results,zone):
 #{% endfor %}
 #</table>
 #    t = """<table id="results_table" style="margin-bottom:0.2rem"><thead><tr><th>Hour range\t</th><th>Transient<br>revenue\t</th><th>Transactions\t</th><th>Utilization<span class="tooltip">*<span class="tooltiptext">Utilization calculation assumes<br>85% occupancy of any leased spots.</span></span>\t</th></tr></thead>"""
-    t = """<table id="results_table" style="margin-bottom:0.2rem"><thead><tr><th>Hour range\t</th><th>Transient<br>revenue\t</th><th>Transactions\t</th><th>Utilization\t</th></tr></thead>"""
+
+    utilization_header = "<th>Utilization\t</th>" if show_utilization else ""
+    t = """<table id="results_table" style="margin-bottom:0.2rem"><thead><tr><th>Hour range\t</th><th>Transient<br>revenue\t</th><th>Transactions\t</th>"""
+    t += utilization_header + "</tr></thead>"
     t += "<tbody>"
 
     for r in results:
@@ -116,8 +119,9 @@ def format_as_table(results,zone):
             pre_utilization = ""
             post_utilization = ""
         if r['hour_range'] != '6pm-midnight' or zone in ["328 - Ivy Bellefonte Lot", "Southside Lots", "341 - 18th & Sidney Lot", "342 - East Carson Lot", "343 - 19th & Carson Lot", "344 - 18th & Carson Lot", "345 - 20th & Sidney Lot"]:
-            utilization_string = "<td>{}{}{}\t</td>".format(pre_utilization,r['utilization_w_leases'],post_utilization)
-            t += "<tr><td>{}\t</td><td>{}\t</td><td>{}\t</td>{}</tr>".format(r['hour_range'], r['total_payments'], r['transaction_count'],utilization_string)
+
+            utilization_string = "<td>{}{}{}\t</td>".format(pre_utilization,r['utilization_w_leases'],post_utilization) if show_utilization else ""
+            t += "<tr><td>{}\t</td><td>{}\t</td><td>{}\t</td>{}</tr>".format(r['hour_range'], r['total_payments'], r['transaction_count'], utilization_string)
     t += "</tbody></table>"
 
     return t

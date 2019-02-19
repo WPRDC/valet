@@ -621,7 +621,7 @@ def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_ho
             utilizations_w_leases.append(total_ut)
 
 
-    # The calculations below collect all revenue from before 8am and move it into the 
+    # The calculations below collect all revenue from before 8am and move it into the
     # 8am-10am slot to allow a more representative 8am-10am utilization to be calculated.
     reshaped_total_utilizations = []
     morning_revenue = 0
@@ -842,7 +842,7 @@ def get_results(request):
     r_list, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges)
     data = {
         'display_zone': zone,
-        'output_table': format_as_table(r_list,zone),
+        'output_table': format_as_table(r_list,zone,request.user.is_staff),
         'chart_ranges': chart_ranges,
         'transactions_chart_data': transactions_chart_data,
         'payments_chart_data': payments_chart_data,
@@ -852,8 +852,8 @@ def get_results(request):
 
 
 def index(request):
-    if not request.user.is_authenticated():
-        return redirect('%s?next=%s' % ('/admin/login/', request.path))
+    if not request.user.is_authenticated():                              # Comment these two lines out to
+        return redirect('%s?next=%s' % ('/admin/login/', request.path))  # make the report generator public.
 
     all_zones = get_zones()
     zone_choices = convert_to_choices(all_zones)
@@ -916,7 +916,8 @@ def index(request):
     #st_form.fields['zone'].initial = ["401 - Downtown 1"]
 
     results, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
-    output_table = format_as_table(results,initial_zone)
+    show_utilization = request.user.is_staff
+    output_table = format_as_table(results,initial_zone,show_utilization)
 
     transactions_time_range = source_time_range(ref_time)
     context = {'zone_picker': st_form.as_p(),
@@ -933,7 +934,9 @@ def index(request):
             'transactions_chart_data': transactions_chart_data,
             'payments_chart_data': payments_chart_data,
             'search_by': search_by,
-            'transactions_time_range': transactions_time_range }
+            'transactions_time_range': transactions_time_range,
+            'show_utilization': show_utilization
+            }
 
     if search_by == 'date':
         context['display_time_range'] = "{} through {}".format(start_date, end_date - timedelta(days=1))
