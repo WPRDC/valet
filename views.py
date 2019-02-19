@@ -635,8 +635,10 @@ def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_ho
         if 0 <= start_hour < 8 and end_hour <= 8:
             u = None
         elif start_hour == 8:
-            morning_utilization = utilization_formula(morning_revenue,effective_space_count,hourly_rate,non_free_days,slot_duration)
-            u = morning_utilization + total_ut
+            u = total_ut
+            if u is not None:
+                morning_utilization = utilization_formula(morning_revenue,effective_space_count,hourly_rate,non_free_days,slot_duration)
+                u = morning_utilization + total_ut
         else:
             u = total_ut
         reshaped_total_utilizations.append(u)
