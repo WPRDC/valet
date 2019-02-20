@@ -115,6 +115,9 @@ def format_as_table(results,zone,show_utilization,late_night_zones):
         if r['hour_range'] == '8am-10am' and r['utilization_w_leases'] != '-':
             pre_utilization = "<b>"
             post_utilization = "*</b>"
+        elif r['hour_range'] == '6pm-midnight' and r['utilization_w_leases'] != '-':
+            pre_utilization = ""
+            post_utilization = "&dagger;"
         else:
             pre_utilization = ""
             post_utilization = ""

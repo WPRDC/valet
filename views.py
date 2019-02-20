@@ -615,10 +615,10 @@ def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_ho
             ut = utilization_formula(revenue,effective_space_count,hourly_rate,non_free_days,slot_duration)
             utilizations.append(ut)
             #if start_hour < 8 or start_hour >= 18: # This excludes the "total" slot (from hour 0 to hour 24).
-            if start_hour >= 18: # This excludes the "total" slot (from hour 0 to hour 24).
-                total_ut = None
-            else:
-                total_ut = (ut*effective_space_count + 0.85*lease_count)/space_count
+            #if start_hour >= 18: # This excludes the "total" slot (from hour 0 to hour 24).
+            #    total_ut = None
+            #else:
+            total_ut = (ut*effective_space_count + 0.85*lease_count)/space_count
             utilizations_w_leases.append(total_ut)
 
 
