@@ -25,6 +25,7 @@ hour_ranges = OrderedDict([('midnight-8am', {'start_hour': 0, 'end_hour': 8}),
                ('total', {'start_hour': 0, 'end_hour': 24}),
                ])
 # [ ] Add final hour range/ranges for the Southside (maybe picking only particular days, so a different query might be needed).
+late_night_zones = ["328 - Ivy Bellefonte Lot", "Southside Lots", "341 - 18th & Sidney Lot", "342 - East Carson Lot", "343 - 19th & Carson Lot", "344 - 18th & Carson Lot", "345 - 20th & Sidney Lot"]
 
 def get_zones():
     regular_zones = ["301 - Sheridan Harvard Lot",
@@ -842,7 +843,7 @@ def get_results(request):
     r_list, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges)
     data = {
         'display_zone': zone,
-        'output_table': format_as_table(r_list,zone,request.user.is_staff),
+        'output_table': format_as_table(r_list,zone,request.user.is_staff,late_night_zones),
         'chart_ranges': chart_ranges,
         'transactions_chart_data': transactions_chart_data,
         'payments_chart_data': payments_chart_data,
@@ -917,7 +918,7 @@ def index(request):
 
     results, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
     show_utilization = request.user.is_staff
-    output_table = format_as_table(results,initial_zone,show_utilization)
+    output_table = format_as_table(results,initial_zone,show_utilization,late_night_zones)
 
     transactions_time_range = source_time_range(ref_time)
     context = {'zone_picker': st_form.as_p(),

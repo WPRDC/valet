@@ -84,7 +84,7 @@ def format_row(hour_range,total_payments,transaction_count,utilization,utilizati
         row['utilization_w_leases'] = format_utilization(utilization_w_leases)
     return row
 
-def format_as_table(results,zone,show_utilization):
+def format_as_table(results,zone,show_utilization,late_night_zones):
     """To simplify piping new results via AJAX, use Python to generate the
     table and then send that to the appropriate div."""
 # The original Jinja template looked like this:
@@ -118,8 +118,7 @@ def format_as_table(results,zone,show_utilization):
         else:
             pre_utilization = ""
             post_utilization = ""
-        if r['hour_range'] != '6pm-midnight' or zone in ["328 - Ivy Bellefonte Lot", "Southside Lots", "341 - 18th & Sidney Lot", "342 - East Carson Lot", "343 - 19th & Carson Lot", "344 - 18th & Carson Lot", "345 - 20th & Sidney Lot"]:
-
+        if r['hour_range'] != '6pm-midnight' or zone in late_night_zones:
             utilization_string = "<td>{}{}{}\t</td>".format(pre_utilization,r['utilization_w_leases'],post_utilization) if show_utilization else ""
             t += "<tr><td>{}\t</td><td>{}\t</td><td>{}\t</td>{}</tr>".format(r['hour_range'], r['total_payments'], r['transaction_count'], utilization_string)
     t += "</tbody></table>"
