@@ -656,7 +656,10 @@ def vectorized_query(zone,search_by,start_date,end_date,start_hours,end_hours,is
 
 def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges):
     r_list = []
-    chart_ranges = ['8am-10am', '10am-2pm', '2pm-6pm', '6pm-midnight']
+    chart_ranges = ['8am-10am', '10am-2pm', '2pm-6pm']
+    if zone in late_night_zones:
+        chart_ranges.append('6pm-midnight')
+
     transactions_chart_data = []
     payments_chart_data = []
 
