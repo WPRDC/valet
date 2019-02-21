@@ -506,7 +506,7 @@ def get_space_count_and_rate(zone,start_date,end_date):
     ### Hack to handle temporary data.wprdc.org cache lag (or something)
     if zone == 'HILL-DIST-2':
         #'as_of': date(2017,11,28),
-        return 114, 1.5
+        return 99+15+38, 1.5
 
     attribute_dicts = get_attributes('spaces')
 
