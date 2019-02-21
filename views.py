@@ -96,7 +96,6 @@ def get_zones():
 def get_minizones():
     # Hard-coding these minizones is only a temporary solution.
     minizones = [
-        "Hill District",
         "HILL-DIST-2",
         "S. Craig",
         "SHADYSIDE1",
