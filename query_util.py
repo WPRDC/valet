@@ -84,7 +84,7 @@ def get_resource_id(ref_time,is_a_minizone):
     elif ref_time == 'purchase_time':
         if by_name:
             from .credentials import site, ckan_api_key as API_key, transactions_package_id as package_id, resource_name
-            from .credentials import site, ckan_api_key as API_key, debug_package_id as package_id, resource_name
+            #from .credentials import site, ckan_api_key as API_key, debug_package_id as package_id, resource_name
             if is_a_minizone:
                 from .credentials import minizones_resource_name as resource_name
                 print("Using data from resource with name {} and package ID {}.".format(resource_name,package_id))
