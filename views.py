@@ -227,7 +227,7 @@ def verify_quarter(d):
 
 
 def get_quarter_choices():
-    earliest_date = date(2016,1,1)
+    earliest_date = date(2014,1,1)
     earliest_quarter = date_to_quarter(earliest_date)
 
     now = datetime.now()
@@ -882,7 +882,7 @@ def index(request):
             #output_field = forms.ChoiceField(choices=first_field_choices, help_text="(what you want to convert your spreadsheet column to)")
     elif search_by == 'month':
         now = datetime.now()
-        first_year = 2016
+        first_year = 2014
         years = list(range(first_year,now.year+1))
         years.append(" ")
         initial_year_choices = convert_to_choices(years)
