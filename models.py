@@ -7,8 +7,8 @@ class LastCached(models.Model):
 class SpaceCount(models.Model):
     zone = models.CharField(max_length=100)
     as_of = models.CharField(max_length=100) # Store date as a string for now.
-    spaces = models.SmallIntegerField()
-    rate = models.FloatField()
+    spaces = models.SmallIntegerField(null=True) # This value can be None when it has not been determined yet in the space-counts-and-rates CKAN resource.
+    rate = models.FloatField(null=True) # This value can be None when it has not been determined yet in the space-counts-and-rates CKAN resource.
 
     class Meta:
         verbose_name = "space count and rate"
