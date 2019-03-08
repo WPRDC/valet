@@ -518,10 +518,17 @@ def get_space_count_and_rate(zone,start_date,end_date):
         if 'rate' in a:
             rates[as_of][a['zone']] = a['rate']
 
-    updates = spaces.keys()
+    #updates = spaces.keys()
+    spaces_for_zone = {k:v for k,v in spaces.items() if zone in v.keys()} # Since not every update
+    # includes every zone, it's necessary to pull out just the updates for the zone of interest
+    # in order for the calculation of closest_date to work.
+    updates_for_zone = spaces_for_zone.keys() # Space counts and rates are grouped together
+    # in the same object in the Django model, so this could just as well have been done with
+    # rates and should work even if the space count or rate for a particular zone is None.
     closest_date = None
     min_diff = timedelta(days = 99999)
-    for u in updates:
+    #for u in updates:
+    for u in updates_for_zone:
         diff = abs( u - start_date ) + abs( u - end_date )
         if diff < min_diff:
             min_diff = diff
