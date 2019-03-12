@@ -12,7 +12,7 @@ from collections import defaultdict, OrderedDict
 
 from .models import SpaceCount, LeaseCount, LastCached
 from .util import parking_days_in_range, format_as_table, format_row, format_date
-from .query_util import get_revenue_and_count_vectorized
+from .query_util import get_revenue_and_count_vectorized, get_credentials_and_package_id
 from .proto_get_revenue import set_table, clear_table
 
 ref_time = 'purchase_time'
@@ -277,7 +277,7 @@ def get_package_metadata(site,package_id,API_key=None):
     return metadata
 
 def source_time_range(ref_time):
-    from .credentials import site, ckan_api_key as API_key, transactions_package_id as package_id
+    site, API_key, package_id = get_credentials_and_package_id()
     metadata = get_package_metadata(site,package_id,API_key)
     if 'temporal_coverage' in metadata:
         begin_date, end_date = metadata['temporal_coverage'].split('/')
@@ -380,7 +380,7 @@ def get_all_records(site,resource_id,API_key=None,chunk_size=5000):
     return all_records
 
 def get_attributes(kind):
-    from .credentials import site, ckan_api_key as API_key
+    site, API_key, _ = get_credentials_and_package_id()
     if kind in ['spaces', 'rates']:
         try:
             last_cached = LastCached.objects.get(parameter = kind)
