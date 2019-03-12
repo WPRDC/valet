@@ -189,7 +189,7 @@ div.formula {
                 if (last) {
                     var d = new Date(year, month, 0);
                 } else {
-                    var d = new Date(year, month-1, 1);
+                    var d = new Date(year, month-1, 1); // This produces 2018-02-28 for year=2018, month=3
                 }
                 return d.toString('YYYY-MM-DD');
             }
@@ -658,7 +658,7 @@ var myChart = new Chart(ctx, {
             return `${year}-${mm}-${dd}`;
         },
         onDraw: function() { // Reset the month-picker values
-            // whenever the user clicks on the tom-date picker,
+            // whenever the user clicks on the to-date picker,
             // invoking the calendar view.
             reset_month_picker();
         },
