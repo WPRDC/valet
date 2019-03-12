@@ -750,7 +750,7 @@ def get_dts_from_date_range(request):
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
     # Convert quarter to start_date and end_date
-    print("Retrieved from_date = '{}' and to_date = '{}'".format(from_date,to_date))
+    print("get_dts: Retrieved from_date = '{}' and to_date = '{}'".format(from_date,to_date))
 
     if from_date not in [None, '']:
         start_dt = datetime.strptime(from_date, "%Y-%m-%d")
