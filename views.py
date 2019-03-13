@@ -6,6 +6,7 @@ from django.template import loader
 from django import forms
 
 from datetime import datetime, timedelta, date
+from dateutil import parser
 
 from pprint import pprint
 from collections import defaultdict, OrderedDict
@@ -418,11 +419,13 @@ def get_attributes(kind):
                     sc = SpaceCount(zone = a['zone'],
                             as_of = a['as_of'],
                             spaces = a['spaces'],
-                            rate = a['rate'])
+                            rate = a['rate'],
+                            rate_description = a['rate_description'])
                     sc.save()
-                elif fetched.spaces != a['spaces'] or fetched.rate != a['rate']:
+                elif fetched.spaces != a['spaces'] or fetched.rate != a['rate'] or fetched.rate_description != a['rate_description']:
                     fetched.spaces = a['spaces']
                     fetched.rate = a['rate']
+                    fetched.rate_description = a['rate_description']
                     fetched.save()
                 # Otherwise, it doesn't need to be updated.
 
@@ -461,7 +464,9 @@ def get_attributes(kind):
                 attribute_d = {'zone': row.zone,
                         'as_of': row.as_of,
                         'spaces': row.spaces,
-                        'rate': row.rate}
+                        'rate': row.rate,
+                        'rate_description': row.rate_description
+                        }
             elif kind in ['leases']:
                 attribute_d = {'zone': row.zone,
                         'as_of': row.as_of,
@@ -472,8 +477,58 @@ def get_attributes(kind):
 
     return attribute_dicts
 
-def get_space_count_and_rate(zone,start_date,end_date):
-    """Check the cache, and if it's been refreshed today, use the cached value."""
+def look_up_rate(rate_dict,hour_to_check):
+    #rate = default_rate = next(iter(rate_dict.items()))[1] # Extracting the value from the first item of an ordered dict.
+    smallest_positive_difference = 24
+    for hour,rate_i in rate_dict.items():
+        diff = (hour_to_check - hour)
+        if diff >= 0 and diff < smallest_positive_difference:
+            rate = rate_i
+            smallest_positive_difference = diff
+    return rate
+
+def convert_description_to_rate(rate_description,start_hour,end_hour):
+    # Decode rate_description and use start_hour and end_hour to identify the rate, if necessary.
+    # Some valid formats follow:
+        # $1.00/HR
+        # $1/hr
+        # $1.50($2 after 2pm)/HR
+    lowercase_rate_description = rate_description.lower()
+    numerator, denominator = lowercase_rate_description.split('/')
+    assert denominator in ['hr','hour']
+    assert numerator[0] == '$'
+    try: # Try converting it to a float.
+        rate = float(numerator[1:])
+    except ValueError:
+        # Try assuming it has this format:
+        # $1.50($2 after 2pm)/HR
+        # $1.50($2 after 2pm, $10 after 9pm)/HR # Maybe the default rate will actually be the earliest rate.
+        default, conditionals_string = numerator[1:].split('(')
+        assert conditionals_string[-1] == ')'
+        default_rate = float(default)
+        conditionals = conditionals_string[:-1].split(',')
+        rate_dict = OrderedDict()
+        rate_dict[0]= default_rate
+        for conditional in conditionals:
+            assert conditional[0] == '$'
+            rate_string, starting_at = conditional[1:].split(' after ')
+            rate = float(rate_string)
+            rate_dict[parser.parse(starting_at).time().hour] = rate
+        start_rate = look_up_rate(rate_dict,start_hour)
+        end_rate = look_up_rate(rate_dict,end_hour-1)
+        print("start_hour = {}, start_rate = {}, end_hour = {}, end_rate = {}".format(start_hour,start_rate,end_hour,end_rate))
+        if start_rate == end_rate: # This will fail for the full-day utilization calculation, where start_hour = 0 and end_hour = 24.
+            return start_rate
+        else:
+            return None # A value of None here will prevent utilizations from being calculated downstream.
+    return rate
+
+def get_space_count_and_rate(zone,start_date,end_date,start_hour=None,end_hour=None):
+    """Check the cache, and if it's been refreshed today, use the cached value.
+
+    If start_hour and end_hour are None, this function will not attempt to identify
+    hour-dependent rates. It will just send back the basic rate and rate_description,
+    suitable for displaying in the UI."""
     # Run query on model.
     # If there's more than zero results and the dates are valid, return the space count
     # Otherwise, get it from the CKAN repository and save the new value.
@@ -511,12 +566,15 @@ def get_space_count_and_rate(zone,start_date,end_date):
 
     spaces = defaultdict(dict)
     rates = defaultdict(dict)
+    rate_descriptions = defaultdict(dict)
     for a in attribute_dicts:
         as_of = convert_string_to_date(a['as_of'])
         if 'spaces' in a:
             spaces[as_of][a['zone']] = a['spaces']
         if 'rate' in a:
             rates[as_of][a['zone']] = a['rate']
+        if 'rate_description' in a:
+            rate_descriptions[as_of][a['zone']] = a['rate_description']
 
     #updates = spaces.keys()
     spaces_for_zone = {k:v for k,v in spaces.items() if zone in v.keys()} # Since not every update
@@ -540,9 +598,16 @@ def get_space_count_and_rate(zone,start_date,end_date):
     if zone in spaces[closest_date]:
         space_count = spaces[closest_date][zone]
     rate = None
+    rate_description = None
     if zone in rates[closest_date]:
         rate = rates[closest_date][zone]
-    return space_count, rate
+        rate_description = rate_descriptions[closest_date][zone]
+    if rate is None and rate_description is not None and start_hour is not None:
+        # Will closest_date work now that some values might be None? # Should closest_date be determined separately for rates+descriptions and spaces?
+        rate = convert_description_to_rate(rate_description,start_hour,end_hour)
+
+
+    return space_count, rate, rate_description
 
 
 
@@ -582,7 +647,7 @@ def get_hourly_rate(zone,start_date,end_date,start_hour,end_hour):
 
     # start_hour and end_hour are being passed since there are a few oddball
     # cases where the rate has been dependent on the time of day.
-    space_count, hourly_rate = get_space_count_and_rate(zone,start_date,end_date)
+    space_count, hourly_rate, rate_description = get_space_count_and_rate(zone,start_date,end_date,start_hour,end_hour)
     return hourly_rate
 
 def utilization_formula(revenue,effective_space_count,hourly_rate,non_free_days,slot_duration):
@@ -729,13 +794,14 @@ def get_features(request):
 
         start_dt, end_dt, start_date, end_date = datetimes_for_month(year,month)
 
-    space_count, hourly_rate = get_space_count_and_rate(zone,start_date,end_date)
+    space_count, hourly_rate, rate_description = get_space_count_and_rate(zone,start_date,end_date)
     leases = get_lease_count(zone,start_date,end_date)
 
     data = {
         'spaces': space_count,
         'leases': leases,
-        'rate': hourly_rate
+        'rate': hourly_rate, # We might not need to send this back.
+        'rate_description': rate_description
     }
 
     pprint(data)
@@ -912,7 +978,7 @@ def index(request):
         raise ValueError("This view is not provisioned to handle a search_by value of {}.".format(search_by))
 
 
-    spaces, rate = get_space_count_and_rate(initial_zone,start_date,end_date)
+    spaces, rate, rate_description = get_space_count_and_rate(initial_zone,start_date,end_date)
     leases = get_lease_count(initial_zone,start_date,end_date)
 
     zone_features = {'spaces': spaces,
