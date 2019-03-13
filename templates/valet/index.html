@@ -274,7 +274,7 @@ div.formula {
         },
         dataType: 'json',
         success: function (data) {
-            $("#rate").html(data.rate)
+            $("#rate_description").html(data.rate_description);
             $("#spaces").html(data.spaces);
             $("#leases").html(data.leases);
             }
@@ -570,7 +570,7 @@ var myChart = new Chart(ctx, {
                 <div class="six columns">
                     <u><b style="font-size: 110%">Zone/lot features for selected lot</b></u><br>
                     <b>Selected lot:</b> <span id="output_zone">{{ display_zone }}</span><br>
-                    <b>Rate:</b> $<span id="rate">{{ zone_features.rate }}</span>/hour, <b>Space count:</b> <span id="spaces">{{ zone_features.spaces }}</span>, <b>Lease count:</b> <span id="leases">{{ zone_features.leases }}</span>
+                    <b>Rate:</b> <span id="rate_description">{{ zone_features.rate_description }}</span>, <b>Space count:</b> <span id="spaces">{{ zone_features.spaces }}</span>, <b>Lease count:</b> <span id="leases">{{ zone_features.leases }}</span>
                 </div>
                 <div class="six columns">
                     <u><b style="font-size: 110%">Date range for selected time range</b></u> <span class="tooltip">&#9432;<span class="tooltiptext">Data available {{ transactions_time_range }}.</span></span><br>

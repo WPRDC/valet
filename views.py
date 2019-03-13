@@ -977,6 +977,7 @@ def index(request):
 
     zone_features = {'spaces': spaces,
             'rate': rate,
+            'rate_description': rate_description,
             'leases': leases}
 
     if search_by == 'quarter':
