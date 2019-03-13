@@ -650,11 +650,16 @@ def utilization_formula(revenue,effective_space_count,hourly_rate,non_free_days,
 def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_hours,is_a_minizone):
     """Transient utilization = (Revenue from parking purchases) / { ([# of spots] - 0.85*[# of leases]) * (rate per hour) * (the number of days in the time span where parking is not free) * (duration of slot in hours) }
 
-   Total utilization =  (ut*effective_space_count + 0.85*lease_count)/space_count
+   Total utilization = (ut*effective_space_count + 0.85*lease_count)/space_count
     = (Revenue from parking purchases) / { [# of spaces] * (rate per hour) * (the number of days in the time span where parking is not free) * (duration of slot in hours) }
       + 0.85 * [# of leases]/[# of spaces]
     or more concisely:
     = revenue / (space_count * rate * days * hours) + 0.85*lease_count/space_count
+
+    Also, note that transient utilization = (total revenue) / (theoretical maximum revenue), so therefore the right way to calculate
+    transient utilization for a period that spans different rates is to sum up the theoretical maximum revenue =
+    = max revenue for slot 1 + max revenue for slot 2 + ...
+    = space_count * days * (rate_1 * hours_1 + rate_2 * hours_2 + ...)
     """
 
     revenues, transaction_counts = get_revenue_and_count_vectorized(ref_time,zone,start_date,end_date,start_hours,end_hours,is_a_minizone)
