@@ -556,12 +556,6 @@ def get_space_count_and_rate(zone,start_date,end_date,start_hour=None,end_hour=N
 
 
     # For now, just get all the data directly.
-
-    ### Hack to handle temporary data.wprdc.org cache lag (or something)
-    if zone == 'HILL-DIST-2':
-        #'as_of': date(2017,11,28),
-        return 99+15+38, 1.5
-
     attribute_dicts = get_attributes('spaces')
 
     spaces = defaultdict(dict)
