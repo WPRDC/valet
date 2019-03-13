@@ -828,8 +828,8 @@ def get_dts_from_date_range(request):
             end_dt = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days = 1)
             start_dt = end_dt - timedelta(days = 1)
         else: # They're both None.
-            end_dt = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-            start_dt = end_dt - timedelta(days = 1)
+            end_dt = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days = 2)
+            start_dt = end_dt - timedelta(days = 3)
 
     return start_dt, end_dt
 
