@@ -84,7 +84,13 @@ def format_row(hour_range,total_payments,transaction_count,utilization,utilizati
         row['utilization_w_leases'] = format_utilization(utilization_w_leases)
     return row
 
-def format_as_table(results,zone,show_utilization,late_night_zones):
+def style_by_offset(rate_offset):
+    """This function takes a rate_offset and returns a style string."""
+    if -0.01 < rate_offset < 0.01: # Essentially, if it is a default value
+        return ''
+    return ' style="background-color:#f2f2f2"'
+
+def format_as_table(results,zone,show_utilization,late_night_zones,rate_offsets):
     """To simplify piping new results via AJAX, use Python to generate the
     table and then send that to the appropriate div."""
 # The original Jinja template looked like this:
@@ -111,7 +117,7 @@ def format_as_table(results,zone,show_utilization,late_night_zones):
     t += utilization_header + "</tr></thead>"
     t += "<tbody>"
 
-    for r in results:
+    for r,rate_offset in zip(results,rate_offsets):
         if r['hour_range'] == '8am-10am' and r['utilization_w_leases'] != '-':
             pre_utilization = "<b>"
             post_utilization = "*</b>"
@@ -123,7 +129,8 @@ def format_as_table(results,zone,show_utilization,late_night_zones):
             post_utilization = ""
         if r['hour_range'] != '6pm-midnight' or zone in late_night_zones:
             utilization_string = "<td>{}{}{}\t</td>".format(pre_utilization,r['utilization_w_leases'],post_utilization) if show_utilization else ""
-            t += "<tr><td>{}\t</td><td>{}\t</td><td>{}\t</td>{}</tr>".format(r['hour_range'], r['total_payments'], r['transaction_count'], utilization_string)
+            style = style_by_offset(rate_offset)
+            t += "<tr{}><td>{}\t</td><td>{}\t</td><td>{}\t</td>{}</tr>".format(style,r['hour_range'], r['total_payments'], r['transaction_count'], utilization_string)
     t += "</tbody></table>"
 
     return t

@@ -884,6 +884,19 @@ def get_dates(request):
     pprint(data)
     return JsonResponse(data)
 
+def find_rate_offsets(zone,start_date,end_date,hour_ranges):
+    """Calculate rate_offsets, a list of floats that indicates how much the
+    rate for the corresponding hour range varies from the default (the first
+    rate in the list). This can be used to style the output table to highlight
+    cases where the rate is different."""
+    rates = []
+    start_hours, end_hours = find_boundaries(hour_ranges)
+    for start_hour,end_hour in zip(start_hours,end_hours):
+        hourly_rate = get_hourly_rate(zone,start_date,end_date,start_hour,end_hour)
+        rates.append(hourly_rate)
+    print("find_rate_offsets: {}".format(rates))
+    return [((r - rates[0]) if r is not None else 0) for r in rates]
+
 def get_results(request):
     """
     Look up the utilization, total payments, and transaction count for this combination
@@ -918,9 +931,10 @@ def get_results(request):
         # [start_date, end_date)
 
     r_list, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges)
+    rate_offsets = find_rate_offsets(zone,start_date,end_date,hour_ranges)
     data = {
         'display_zone': zone,
-        'output_table': format_as_table(r_list,zone,request.user.is_staff,late_night_zones),
+        'output_table': format_as_table(r_list,zone,request.user.is_staff,late_night_zones,rate_offsets),
         'chart_ranges': chart_ranges,
         'transactions_chart_data': transactions_chart_data,
         'payments_chart_data': payments_chart_data,
@@ -996,7 +1010,8 @@ def index(request):
 
     results, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
     show_utilization = request.user.is_staff
-    output_table = format_as_table(results,initial_zone,show_utilization,late_night_zones)
+    rate_offsets = find_rate_offsets(initial_zone,start_date,end_date,hour_ranges)
+    output_table = format_as_table(results,initial_zone,show_utilization,late_night_zones,rate_offsets)
 
     transactions_time_range = source_time_range(ref_time)
     context = {'zone_picker': st_form.as_p(),
