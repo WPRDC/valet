@@ -135,3 +135,19 @@ def format_as_table(results,zone,show_utilization,late_night_zones,rate_offsets)
     t += "</tbody></table>"
 
     return t
+
+def format_rate_description(rate_description):
+    # This function borrows code from convert_description_to_rate, so
+    # there's some opportunity for refactoring.
+    lowercase_rate_description = rate_description.lower()
+    if '/' not in lowercase_rate_description: # Deal with cases like *SPECIAL*
+        return rate_description
+    numerator, denominator = lowercase_rate_description.split('/')
+    assert denominator in ['hr','hour']
+    assert numerator[0] == '$'
+    try: # Try converting it to a float.
+        rate = float(numerator[1:])
+        return rate_description
+    except ValueError:
+        style = style_by_offset(42)
+        return "<span {}>{}{}</span>".format(style,rate_description,"&Dagger;")

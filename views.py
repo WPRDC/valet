@@ -12,7 +12,7 @@ from pprint import pprint
 from collections import defaultdict, OrderedDict
 
 from .models import SpaceCount, LeaseCount, LastCached
-from .util import parking_days_in_range, format_as_table, format_row, format_date
+from .util import parking_days_in_range, format_as_table, format_row, format_date, format_rate_description
 from .query_util import get_revenue_and_count_vectorized, get_credentials_and_package_id
 from .proto_get_revenue import set_table, clear_table
 
@@ -803,10 +803,9 @@ def get_features(request):
         'spaces': space_count,
         'leases': leases,
         'rate': hourly_rate, # We might not need to send this back.
-        'rate_description': rate_description
+        'rate_description': format_rate_description(rate_description)
     }
 
-    pprint(data)
     return JsonResponse(data)
 
 def get_dts_from_date_range(request):
@@ -881,7 +880,6 @@ def get_dates(request):
             'display_time_range': "{}/{}".format(month,year)
         }
 
-    pprint(data)
     return JsonResponse(data)
 
 def find_rate_offsets(zone,start_date,end_date,hour_ranges):
