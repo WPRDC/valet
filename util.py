@@ -128,8 +128,9 @@ def format_as_table(results,zone,show_utilization,late_night_zones,rate_offsets)
             pre_utilization = ""
             post_utilization = ""
         if r['hour_range'] != '6pm-midnight' or zone in late_night_zones:
-            utilization_string = "<td>{}{}{}\t</td>".format(pre_utilization,r['utilization_w_leases'],post_utilization) if show_utilization else ""
             style = style_by_offset(rate_offset)
+            glyph = "" if style == "" else "&Dagger;"
+            utilization_string = "<td>{}{}{}{}\t</td>".format(pre_utilization,r['utilization_w_leases'],post_utilization,glyph) if show_utilization else ""
             t += "<tr{}><td>{}\t</td><td>{}\t</td><td>{}\t</td>{}</tr>".format(style,r['hour_range'], r['total_payments'], r['transaction_count'], utilization_string)
     t += "</tbody></table>"
 
