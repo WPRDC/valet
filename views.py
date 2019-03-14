@@ -724,6 +724,16 @@ def vectorized_query(zone,search_by,start_date,end_date,start_hours,end_hours,is
         rows.append({'total_payments': rev, 'transaction_count': transaction_count, 'utilization': ut, 'utilization_w_leases': ut_w_leases})
     return rows
 
+def find_boundaries(hour_ranges):
+    start_hours = []
+    end_hours = []
+    for key in hour_ranges:
+        start_hour = hour_ranges[key]['start_hour']
+        end_hour = hour_ranges[key]['end_hour']
+        start_hours.append(start_hour)
+        end_hours.append(end_hour)
+    return start_hours, end_hours
+
 def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges):
     r_list = []
     chart_ranges = ['8am-10am', '10am-2pm', '2pm-6pm']
@@ -733,14 +743,7 @@ def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ran
     transactions_chart_data = []
     payments_chart_data = []
 
-    start_hours = []
-    end_hours = []
-    for key in hour_ranges:
-        start_hour = hour_ranges[key]['start_hour']
-        end_hour = hour_ranges[key]['end_hour']
-        start_hours.append(start_hour)
-        end_hours.append(end_hour)
-
+    start_hours, end_hours = find_boundaries(hour_ranges)
 
     is_a_minizone = is_minizone(zone)
     set_table(ref_time,is_a_minizone)
