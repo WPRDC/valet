@@ -241,12 +241,25 @@ div.formula {
         // they're now reflected in the output
         // shown on the browser.
         from_date = synthesize_date(false);
-        to_date = synthesize_date(true);
         if ((from_date)) {
+            frompicker.setMaxDate(from_date); // Absolutely critical fix to
+            // allow frompicker's date to be correctly set. Previously, the
+            // maximum value (set for frompicker by topicker) could prevent
+            // frompicker from being set to from_date.
             frompicker.setDate(from_date);
+            console.log("Trying to set frompicker date to " + from_date);
+            // Console output is
+            // Setting frompicker date to Sun Apr 01 2018 00:00:00 GMT-0400 (Eastern Daylight Time)a
+            // but the date picker shows 2018-03-31. Why?
+
+                // Then the Django console says:
+                // get_dts: Retrieved from_date = '2018-03-31' and to_date = '2018-03-31' (The to_date is a lagging residual from when the dates came from the month being 2018-03.)
+                // get_dts: Returning start_dt = 2018-03-31 00:00:00 and end_dt = 2018-04-01 00:00:00
         }
+        to_date = synthesize_date(true);
         if ((to_date)) {
             topicker.setDate(to_date);
+            console.log("Trying to set topicker date to " + to_date);
         }
         if ((from_date) || (to_date)) {
             refresh_dates();
