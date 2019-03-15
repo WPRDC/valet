@@ -822,7 +822,11 @@ def get_dts_from_date_range(request):
     if from_date not in [None, '']:
         start_dt = datetime.strptime(from_date, "%Y-%m-%d")
         if to_date in [None, '']:
-            end_dt = start_dt + timedelta(days = 1)
+            #end_dt = start_dt + timedelta(days = 1)
+            # Default to using the beginning of the next month.
+            end_dt = convert_date_to_datetime(end_of_month(start_dt) + timedelta(days = 1))
+            #end_dt = None
+            print("Since no to_date was found (maybe because of JavaScript's asynchronicity), get_dts is coercing end_dt to {}.".format(end_dt))
         else:
             end_dt = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days = 1)
     else:
