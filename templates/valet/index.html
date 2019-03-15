@@ -181,6 +181,17 @@ div.formula {
           $('#id_year').val(" ");
     }
 
+    function dateToString(date) {
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear();
+
+        var mm = ((month > 9) ? '' : '0') + month;
+        var dd = ((day > 9)   ? '' : '0') + day;
+
+        return `${year}-${mm}-${dd}`;
+    }
+
     function synthesize_date(last) {
         var month = ($("#id_month").val());
         var year = ($("#id_year").val());
@@ -188,10 +199,16 @@ div.formula {
             if (year != ' ') {
                 if (last) {
                     var d = new Date(year, month, 0);
+                    console.log("Synthesizing an end-of-the-month date: " + d);
+                    console.log("... or formatted as a string, topicker should be set to: " + dateToString(d));
                 } else {
                     var d = new Date(year, month-1, 1); // This produces 2018-02-28 for year=2018, month=3
+                    console.log("Synthesizing a start-of-the-month date: " + d);
+                    console.log("... or formatted as a string, frompicker should be set to: " + dateToString(d));
                 }
-                return d.toString('YYYY-MM-DD');
+                d.setDate(d.getDate() + 1); // It's not clear why it's necessary to add a day to the
+                // date to make pikaday use the right day, though it might be a UTC/Eastern problem.
+                return dateToString(d);
             }
         }
         return ""
