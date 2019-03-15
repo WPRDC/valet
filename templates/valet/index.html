@@ -336,8 +336,8 @@ div.formula {
         },
         dataType: 'json',
         success: function (data) {
-            $("#selected_time_range").html(data.display_time_range)
-            $("#start_dt").html(data.start_dt)
+            $("#selected_time_range").html(data.display_time_range);
+            $("#start_dt").html(data.start_dt);
             $("#end_dt").html(data.end_dt);
             }
         });
@@ -657,7 +657,13 @@ var myChart = new Chart(ctx, {
             if(Number(new Date(this.getDate()))>Number(new Date(document.getElementById('todatepicker').value)))
             {
                 document.getElementById('todatepicker').value="";
+                console.log("Resetting todatepicker");
             }
+            else {
+                console.log(document.getElementById('todatepicker').value);
+            }
+            //if(document.getElementById('todatepicker').value !== "") {
+            //}
         },
         keyboardInput: false,
         reposition: false,
@@ -694,9 +700,11 @@ var myChart = new Chart(ctx, {
         },
         onSelect: function() {
             frompicker.setMaxDate(new Date(this.getDate().getTime()+parseInt(0*24*60*60*1000)));
+            console.log("Just set max date of frompicker to " + new Date(this.getDate().getTime()+parseInt(0*24*60*60*1000)))
             if(Number(new Date(this.getDate()))<Number(new Date(document.getElementById('fromdatepicker').value)))
             {
                 document.getElementById('fromdatepicker').value="";
+                console.log("Resetting fromdatepicker");
             }
             refresh_dates();
             refresh_features();
