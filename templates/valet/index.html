@@ -459,6 +459,14 @@ var myChart = new Chart(ctx, {
 {% endblock %}
 
 {% block content %}
+{% if user.is_authenticated %}
+    {% if admin_view %}
+        <p><a href="public/">Switch to public view</a></p>
+    {% else %}
+        <p><a href="nonpublic/">Switch to admin view</a></p>
+    {% endif %}
+
+{% endif %}
 <div class="container">
     <div class="row">
         <div class="eight columns">

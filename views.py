@@ -904,6 +904,7 @@ def get_results(request):
     Look up the utilization, total payments, and transaction count for this combination
     of zone and quarter/month (eventually extend this to arbitrary date range) and return them.
     """
+    admin_view = request.GET.get('admin_view', request.user.is_staff)
     zone = request.GET.get('zone', None)
     search_by = request.GET.get('search_by', 'month')
     if search_by == 'quarter':
@@ -936,7 +937,7 @@ def get_results(request):
     rate_offsets = find_rate_offsets(zone,start_date,end_date,hour_ranges)
     data = {
         'display_zone': zone,
-        'output_table': format_as_table(r_list,zone,request.user.is_staff,late_night_zones,rate_offsets),
+        'output_table': format_as_table(r_list,zone,admin_view,late_night_zones,rate_offsets),
         'chart_ranges': chart_ranges,
         'transactions_chart_data': transactions_chart_data,
         'payments_chart_data': payments_chart_data,
@@ -944,12 +945,26 @@ def get_results(request):
     }
     return JsonResponse(data)
 
+def public(request):
+    #return render(request, 'valet/index.html', {'admin_view': False})
+    request.session['admin_view'] = False
+    return redirect('valet:index')
+
+def nonpublic(request):
+    request.session['admin_view'] = True
+    return redirect('valet:index')
 
 def index(request):
     if not request.user.is_authenticated():                              # Comment these two lines out to
         return redirect('%s?next=%s' % ('/admin/login/', request.path))  # make the report generator public.
 
     admin_view = request.user.is_staff
+    if request.user.is_staff:
+        #admin_view = request.GET.get('admin_view', True) # This line should work, but is failing to get the request.session parameter value.
+        if 'admin_view' in request.session:
+            if request.session['admin_view'] == False:
+                admin_view = False
+
     all_zones = get_zones()
     zone_choices = convert_to_choices(all_zones)
     initial_zone = all_zones[0]
