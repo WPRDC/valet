@@ -763,6 +763,8 @@ def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ran
     set_table(ref_time,is_a_minizone)
     rows = vectorized_query(zone,search_by,start_date,end_date,start_hours,end_hours,is_a_minizone)
     clear_table(ref_time,is_a_minizone)
+
+    utilization_w_leases_8_to_10 = None
     for key,r_dict in zip(hour_ranges,rows):
 
         #if zone[0] == '3': # This signifies a lot rather than on-street parking:
@@ -776,7 +778,16 @@ def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ran
             transactions_chart_data.append(r_dict['transaction_count'])
             payments_chart_data.append(r_dict['total_payments'])
 
-    return r_list, transactions_chart_data, payments_chart_data, chart_ranges
+        if key == '8am-10am': # Pull out the utilization-with-leases value for 8
+            utilization_w_leases_8_to_10 = r_dict['utilization_w_leases'] # to 10am
+            # and use as a best estimate of how busy the lot or zone was on that day.
+
+    if utilization_w_leases_8_to_10 is None:
+        utilization_w_leases_8_to_10 = "-"
+    else:
+        utilization_w_leases_8_to_10 = "{.1f}%".format(100*utilization_w_leases_8_to_10)
+
+    return r_list, transactions_chart_data, payments_chart_data, chart_ranges, utilization_w_leases_8_to_10
 
 def get_features(request):
     """
@@ -948,7 +959,7 @@ def get_results(request):
         # [start_date, end_date)
 
     hour_ranges = get_hour_ranges(admin_view)
-    r_list, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges)
+    r_list, transactions_chart_data, payments_chart_data, chart_ranges, utilization_w_leases_8_to_10  = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges)
     rate_offsets = find_rate_offsets(zone,start_date,end_date,hour_ranges)
     data = {
         'display_zone': zone,
@@ -956,7 +967,8 @@ def get_results(request):
         'chart_ranges': chart_ranges,
         'transactions_chart_data': transactions_chart_data,
         'payments_chart_data': payments_chart_data,
-        'valid_date_range': True
+        'valid_date_range': True,
+        'utilization_w_leases_8_to_10': utilization_w_leases_8_to_10
     }
     return JsonResponse(data)
 
@@ -1042,7 +1054,7 @@ def index(request):
     #st_form.fields['zone'].initial = ["401 - Downtown 1"]
 
     hour_ranges = get_hour_ranges(admin_view)
-    results, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
+    results, transactions_chart_data, payments_chart_data, chart_ranges, utilization_w_leases_8_to_10 = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
 
     rate_offsets = find_rate_offsets(initial_zone,start_date,end_date,hour_ranges)
     output_table = format_as_table(results,initial_zone,admin_view,late_night_zones,rate_offsets)
@@ -1063,7 +1075,8 @@ def index(request):
             'payments_chart_data': payments_chart_data,
             'search_by': search_by,
             'transactions_time_range': transactions_time_range,
-            'admin_view': admin_view
+            'admin_view': admin_view,
+            'utilization_w_leases_8_to_10': utilization_w_leases_8_to_10
             }
 
     if search_by == 'date':
