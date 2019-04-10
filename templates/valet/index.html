@@ -556,7 +556,7 @@ var myChart = new Chart(ctx, {
             <div class="row">
                 <div class="eight columns">
                     <details>
-                        <summary>Definition of utilization{% if show_utilization %}<b>*</b>&dagger;{% endif %}</summary>
+                        <summary>Definition of utilization{% if admin_view %}<b>*</b>&dagger;{% endif %}</summary>
                         A utilization metric can be calculated to estimate the level of parking purchases in a given time interval.
                         <br>
                         <br>
@@ -577,7 +577,7 @@ var myChart = new Chart(ctx, {
                         or more concisely:
                         <div class="formula">Utilization = revenue / (space_count &times; rate &times; days &times; hours) + 0.85&times;lease_count/space_count</div>
                         <br>
-                        {% if show_utilization %}
+                        {% if admin_view %}
                         <b>*</b> <i>To make utilization more useful, any revenue from midnight to 8am (typically early morning purchases which take effect at 8am) has been added to the utilization in the 8am-10am slot, which is why that utilization value in the table is bolded.</i>
                         <br>
                         <br>

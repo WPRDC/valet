@@ -949,6 +949,7 @@ def index(request):
     if not request.user.is_authenticated():                              # Comment these two lines out to
         return redirect('%s?next=%s' % ('/admin/login/', request.path))  # make the report generator public.
 
+    admin_view = request.user.is_staff
     all_zones = get_zones()
     zone_choices = convert_to_choices(all_zones)
     initial_zone = all_zones[0]
@@ -1011,9 +1012,8 @@ def index(request):
     #st_form.fields['zone'].initial = ["401 - Downtown 1"]
 
     results, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
-    show_utilization = request.user.is_staff
     rate_offsets = find_rate_offsets(initial_zone,start_date,end_date,hour_ranges)
-    output_table = format_as_table(results,initial_zone,show_utilization,late_night_zones,rate_offsets)
+    output_table = format_as_table(results,initial_zone,admin_view,late_night_zones,rate_offsets)
 
     transactions_time_range = source_time_range(ref_time)
     context = {'zone_picker': st_form.as_p(),
@@ -1031,7 +1031,7 @@ def index(request):
             'payments_chart_data': payments_chart_data,
             'search_by': search_by,
             'transactions_time_range': transactions_time_range,
-            'show_utilization': show_utilization
+            'admin_view': admin_view
             }
 
     if search_by == 'date':
