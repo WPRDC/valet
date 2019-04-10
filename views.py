@@ -18,15 +18,29 @@ from .proto_get_revenue import set_table, clear_table
 
 ref_time = 'purchase_time'
 
-hour_ranges = OrderedDict([('midnight-8am', {'start_hour': 0, 'end_hour': 8}),
+late_night_zones = ["328 - Ivy Bellefonte Lot", "Southside Lots", "341 - 18th & Sidney Lot", "342 - East Carson Lot", "343 - 19th & Carson Lot", "344 - 18th & Carson Lot", "345 - 20th & Sidney Lot"]
+# [ ] Add final hour range/ranges for the Southside (maybe picking only particular days, so a different query might be needed).
+
+def collapse_morning(hour_ranges):
+    if 'midnight-8am' in hour_ranges and '8am-10am' in hour_ranges:
+        del hour_ranges['midnight-8am']
+        del hour_ranges['8am-10am']
+        new_hour_ranges = OrderedDict([('midnight-10am', {'start_hour': 0, 'end_hour': 10})] + list(hour_ranges.items()))
+        return new_hour_ranges
+    else:
+        raise ValueError("Unable to collapse morning hour ranges correctly.")
+
+def get_hour_ranges(admin_view):
+    hour_ranges = OrderedDict([('midnight-8am', {'start_hour': 0, 'end_hour': 8}),
                ('8am-10am', {'start_hour': 8, 'end_hour': 10}),
                ('10am-2pm', {'start_hour': 10, 'end_hour': 14}),
                ('2pm-6pm', {'start_hour': 14, 'end_hour': 18}),
                ('6pm-midnight', {'start_hour': 18, 'end_hour': 24}),
                ('total', {'start_hour': 0, 'end_hour': 24}),
                ])
-# [ ] Add final hour range/ranges for the Southside (maybe picking only particular days, so a different query might be needed).
-late_night_zones = ["328 - Ivy Bellefonte Lot", "Southside Lots", "341 - 18th & Sidney Lot", "342 - East Carson Lot", "343 - 19th & Carson Lot", "344 - 18th & Carson Lot", "345 - 20th & Sidney Lot"]
+    if not admin_view:
+        hour_ranges = collapse_morning(hour_ranges)
+    return hour_ranges
 
 def get_zones():
     regular_zones = ["301 - Sheridan Harvard Lot",
@@ -933,6 +947,7 @@ def get_results(request):
         # end_date is the first day that is not included in the date range.
         # [start_date, end_date)
 
+    hour_ranges = get_hour_ranges(admin_view)
     r_list, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges)
     rate_offsets = find_rate_offsets(zone,start_date,end_date,hour_ranges)
     data = {
@@ -1026,7 +1041,9 @@ def index(request):
         st_form = MonthSpaceTimeForm(initial = {'year': initial_year, 'month': initial_month, 'zone': initial_zone})
     #st_form.fields['zone'].initial = ["401 - Downtown 1"]
 
+    hour_ranges = get_hour_ranges(admin_view)
     results, transactions_chart_data, payments_chart_data, chart_ranges = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
+
     rate_offsets = find_rate_offsets(initial_zone,start_date,end_date,hour_ranges)
     output_table = format_as_table(results,initial_zone,admin_view,late_night_zones,rate_offsets)
 
