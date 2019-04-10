@@ -25,7 +25,7 @@ def collapse_morning(hour_ranges):
     if 'midnight-8am' in hour_ranges and '8am-10am' in hour_ranges:
         del hour_ranges['midnight-8am']
         del hour_ranges['8am-10am']
-        new_hour_ranges = OrderedDict([('midnight-10am', {'start_hour': 0, 'end_hour': 10})] + list(hour_ranges.items()))
+        new_hour_ranges = OrderedDict([('8am-10am', {'start_hour': 0, 'end_hour': 10})] + list(hour_ranges.items()))
         return new_hour_ranges
     else:
         raise ValueError("Unable to collapse morning hour ranges correctly.")
