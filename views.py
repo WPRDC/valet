@@ -781,6 +781,9 @@ def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ran
         if key == '8am-10am': # Pull out the utilization-with-leases value for 8
             utilization_w_leases_8_to_10 = r_dict['utilization_w_leases'] # to 10am
             # and use as a best estimate of how busy the lot or zone was on that day.
+            # However, this value (under public view, w/ midnight-10am as the true range,
+            # does not match the value obtained by using morning_utilization manipulations
+            # returned by vectorized_query with the true hour ranges.
 
     if utilization_w_leases_8_to_10 is None:
         utilization_w_leases_8_to_10 = "-"
@@ -960,6 +963,14 @@ def get_results(request):
 
     hour_ranges = get_hour_ranges(admin_view)
     r_list, transactions_chart_data, payments_chart_data, chart_ranges, utilization_w_leases_8_to_10  = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges)
+    if not admin_view: # This is all a hack to get the correct utilization_w_leases_8_to_10 value.
+        # How the morning collapse, the hour-range manipulations, and the utilization-box value
+        # extraction are working should all be better coordinated.
+        print("Before, utilization_w_leases_8_to_10 = {}".format(utilization_w_leases_8_to_10))
+        hour_ranges = get_hour_ranges(True)
+        _, _, _, _, utilization_w_leases_8_to_10  = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges)
+        print("After, utilization_w_leases_8_to_10 = {}".format(utilization_w_leases_8_to_10))
+
     rate_offsets = find_rate_offsets(zone,start_date,end_date,hour_ranges)
     data = {
         'display_zone': zone,
@@ -1055,6 +1066,13 @@ def index(request):
 
     hour_ranges = get_hour_ranges(admin_view)
     results, transactions_chart_data, payments_chart_data, chart_ranges, utilization_w_leases_8_to_10 = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
+    if not admin_view: # This is all a hack to get the correct utilization_w_leases_8_to_10 value.
+        # How the morning collapse, the hour-range manipulations, and the utilization-box value
+        # extraction are working should all be better coordinated.
+        print("Before, utilization_w_leases_8_to_10 = {}".format(utilization_w_leases_8_to_10))
+        hour_ranges = get_hour_ranges(True)
+        _, _, _, _, utilization_w_leases_8_to_10  = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
+        print("After, utilization_w_leases_8_to_10 = {}".format(utilization_w_leases_8_to_10))
 
     rate_offsets = find_rate_offsets(initial_zone,start_date,end_date,hour_ranges)
     output_table = format_as_table(results,initial_zone,admin_view,late_night_zones,rate_offsets)
