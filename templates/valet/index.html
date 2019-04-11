@@ -547,13 +547,31 @@ var myChart = new Chart(ctx, {
                         <canvas id="myChart" width="300" height="50"></canvas>
                     </div>
                 </div>
+            </div>
+            <div class="row">
+                {% if admin_view %}
                 <div class="twelve columns">
+                {% else %}
+                <div class="nine columns">
+                {% endif %}
                     <div id="output">
                         {% autoescape off %}
                         {{ output_table }}
                         {% endautoescape %}
                     </div>
                 </div>
+                {% if not admin_view and utilization_w_leases_8_to_10 != '-' %}
+                <div class="three columns">
+                    <div style="border: 1px solid black;font-size:90%;text-align:center;margin-top:1.2rem;">
+                        Projected Average Utilization<br>
+                        <span style="font-size:200%">
+                            {{ utilization_w_leases_8_to_10 }}
+                        </span>
+                        <P></P>
+                        <P></P>
+                    </div>
+                </div>
+                {% endif %}
             </div>
             <div class="row">
                 <div class="twelve columns">

@@ -113,7 +113,10 @@ def format_as_table(results,zone,show_utilization,late_night_zones,rate_offsets)
 #    t = """<table id="results_table" style="margin-bottom:0.2rem"><thead><tr><th>Hour range\t</th><th>Transient<br>revenue\t</th><th>Transactions\t</th><th>Utilization<span class="tooltip">*<span class="tooltiptext">Utilization calculation assumes<br>85% occupancy of any leased spots.</span></span>\t</th></tr></thead>"""
 
     utilization_header = "<th>Utilization\t</th>" if show_utilization else ""
-    t = """<table id="results_table" style="margin-bottom:0.2rem"><thead><tr><th>Hour range\t</th><th>Transient<br>revenue\t</th><th>Transactions\t</th>"""
+    table_alignment = "" if show_utilization else 'align=right'
+    t = """<table id="results_table" style="margin-bottom:0.2rem" """
+    t += table_alignment
+    t += """><thead><tr><th>Hour range\t</th><th>Transient<br>revenue\t</th><th>Transactions\t</th>"""
     t += utilization_header + "</tr></thead>"
     t += "<tbody>"
 
