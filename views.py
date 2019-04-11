@@ -785,7 +785,7 @@ def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ran
     if utilization_w_leases_8_to_10 is None:
         utilization_w_leases_8_to_10 = "-"
     else:
-        utilization_w_leases_8_to_10 = "{.1f}%".format(100*utilization_w_leases_8_to_10)
+        utilization_w_leases_8_to_10 = "{:.1f}%".format(100*utilization_w_leases_8_to_10)
 
     return r_list, transactions_chart_data, payments_chart_data, chart_ranges, utilization_w_leases_8_to_10
 
