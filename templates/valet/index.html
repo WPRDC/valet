@@ -370,6 +370,7 @@ div.formula {
             activate_overlay(false);
             if (data.valid_date_range) {
                 $("#output").html(data.output_table)
+                $("#u-box").html(data.utilization_w_leases_8_to_10)
                 $("#output_zone").html(data.display_zone)
                 // update chart
                 myChart.data.labels = data.chart_ranges;
@@ -564,7 +565,7 @@ var myChart = new Chart(ctx, {
                 <div class="three columns">
                     <div style="border: 1px solid black;font-size:90%;text-align:center;margin-top:2.2rem;">
                         Projected Average Utilization<br>
-                        <span style="font-size:200%">
+                        <span id="u-box" style="font-size:200%">
                             {{ utilization_w_leases_8_to_10 }}
                         </span>
                         <P></P>

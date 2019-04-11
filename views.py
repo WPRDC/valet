@@ -932,7 +932,14 @@ def get_results(request):
     Look up the utilization, total payments, and transaction count for this combination
     of zone and quarter/month (eventually extend this to arbitrary date range) and return them.
     """
-    admin_view = request.GET.get('admin_view', request.user.is_staff)
+    #admin_view = request.GET.get('admin_view', request.user.is_staff) # This does not work for a still unknown reason.
+    admin_view = request.user.is_staff
+    if request.user.is_staff:
+        #admin_view = request.GET.get('admin_view', True) # This line should work, but is failing to get the request.session parameter value.
+        if 'admin_view' in request.session:
+            if request.session['admin_view'] == False:
+                admin_view = False
+
     zone = request.GET.get('zone', None)
     search_by = request.GET.get('search_by', 'month')
     if search_by == 'quarter':
@@ -962,13 +969,13 @@ def get_results(request):
         # [start_date, end_date)
 
     hour_ranges = get_hour_ranges(admin_view)
-    r_list, transactions_chart_data, payments_chart_data, chart_ranges, utilization_w_leases_8_to_10  = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges)
+    r_list, transactions_chart_data, payments_chart_data, chart_ranges, utilization_w_leases_8_to_10 = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges)
     if not admin_view: # This is all a hack to get the correct utilization_w_leases_8_to_10 value.
         # How the morning collapse, the hour-range manipulations, and the utilization-box value
         # extraction are working should all be better coordinated.
         print("Before, utilization_w_leases_8_to_10 = {}".format(utilization_w_leases_8_to_10))
         hour_ranges = get_hour_ranges(True)
-        _, _, _, _, utilization_w_leases_8_to_10  = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges)
+        _, _, _, _, utilization_w_leases_8_to_10 = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges)
         print("After, utilization_w_leases_8_to_10 = {}".format(utilization_w_leases_8_to_10))
 
     rate_offsets = find_rate_offsets(zone,start_date,end_date,hour_ranges)
@@ -979,7 +986,7 @@ def get_results(request):
         'transactions_chart_data': transactions_chart_data,
         'payments_chart_data': payments_chart_data,
         'valid_date_range': True,
-        'utilization_w_leases_8_to_10': utilization_w_leases_8_to_10
+        'utilization_w_leases_8_to_10': utilization_w_leases_8_to_10,
     }
     return JsonResponse(data)
 
@@ -1071,7 +1078,7 @@ def index(request):
         # extraction are working should all be better coordinated.
         print("Before, utilization_w_leases_8_to_10 = {}".format(utilization_w_leases_8_to_10))
         hour_ranges = get_hour_ranges(True)
-        _, _, _, _, utilization_w_leases_8_to_10  = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
+        _, _, _, _, utilization_w_leases_8_to_10 = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
         print("After, utilization_w_leases_8_to_10 = {}".format(utilization_w_leases_8_to_10))
 
     rate_offsets = find_rate_offsets(initial_zone,start_date,end_date,hour_ranges)
