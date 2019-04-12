@@ -43,6 +43,17 @@ def get_hour_ranges(admin_view):
     return hour_ranges
 
 def get_zones():
+    # [ ] There should be a better way to do this to ensure that new zones appear here.
+
+    # * Switch to fetching these from either 1) a database cache or 2) the space-counts dataset.
+    # However, it would probably be better to preserve the lots/zones for which there are no space counts
+    # and just flag them appropriately.
+
+    # * These could also be fetched from the Payments Points information by filtering through the "zone"
+    # and "all_groups" columns, removing unneeded designations like "EASTLIB" (since this is just
+    # an enforcement-zone synonym for "412 - East Liberty"). This would get the minizones/sampling zones
+    # like SHADYSIDE1 and S.Craig.
+
     regular_zones = ["301 - Sheridan Harvard Lot",
         "302 - Sheridan Kirkwood Lot",
         "304 - Tamello Beatty Lot",
@@ -425,8 +436,8 @@ def get_attributes(kind):
         # Cache data in the corresponding table.
         if kind in ['spaces', 'rates']:
             for a in attribute_dicts:
-                if a['zone'] == '424 - Technology Drive':
-                    a['rate'] = 2
+                if a['zone'] == '424 - Technology Drive': # Maybe move this coercing to wherever variable rate
+                    a['rate'] = 2                         # assignment is handled.
                     print("For now, just coerce this rate to $2 per hour, but eventually something smarter should be done.")
                 fetched = SpaceCount.objects.filter(zone = a['zone'], as_of = a['as_of']).first()
                 if fetched is None:
