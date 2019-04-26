@@ -669,6 +669,17 @@ def get_hourly_rate(zone,start_date,end_date,start_hour,end_hour):
     space_count, hourly_rate, rate_description = get_space_count_and_rate(zone,start_date,end_date,start_hour,end_hour)
     return hourly_rate
 
+def format_utilization(u_input,admin_view=True):
+    u_threshold = 115
+    if u_input is None:
+        u_formatted = "-"
+    else:
+        if not admin_view:
+            if u_input > u_threshold/100.0:
+                return "{}%+".format(u_threshold)
+        u_formatted = "{:.1f}%".format(100*u_input)
+    return u_formatted
+
 def utilization_formula(revenue,effective_space_count,hourly_rate,non_free_days,slot_duration):
     return revenue/effective_space_count/hourly_rate/non_free_days/slot_duration
 
@@ -759,7 +770,7 @@ def find_boundaries(hour_ranges):
         end_hours.append(end_hour)
     return start_hours, end_hours
 
-def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges):
+def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges,admin_view):
     r_list = []
     chart_ranges = ['8am-10am', '10am-2pm', '2pm-6pm']
     if zone in late_night_zones:
@@ -796,10 +807,7 @@ def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ran
             # does not match the value obtained by using morning_utilization manipulations
             # returned by vectorized_query with the true hour ranges.
 
-    if utilization_w_leases_8_to_10 is None:
-        utilization_w_leases_8_to_10 = "-"
-    else:
-        utilization_w_leases_8_to_10 = "{:.1f}%".format(100*utilization_w_leases_8_to_10)
+    utilization_w_leases_8_to_10 = format_utilization(utilization_w_leases_8_to_10,admin_view)
 
     return r_list, transactions_chart_data, payments_chart_data, chart_ranges, utilization_w_leases_8_to_10
 
@@ -980,13 +988,13 @@ def get_results(request):
         # [start_date, end_date)
 
     hour_ranges = get_hour_ranges(admin_view)
-    r_list, transactions_chart_data, payments_chart_data, chart_ranges, utilization_w_leases_8_to_10 = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges)
+    r_list, transactions_chart_data, payments_chart_data, chart_ranges, utilization_w_leases_8_to_10 = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges,admin_view)
     if not admin_view: # This is all a hack to get the correct utilization_w_leases_8_to_10 value.
         # How the morning collapse, the hour-range manipulations, and the utilization-box value
         # extraction are working should all be better coordinated.
         print("Before, utilization_w_leases_8_to_10 = {}".format(utilization_w_leases_8_to_10))
         hour_ranges = get_hour_ranges(True)
-        _, _, _, _, utilization_w_leases_8_to_10 = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges)
+        _, _, _, _, utilization_w_leases_8_to_10 = obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ranges,admin_view)
         print("After, utilization_w_leases_8_to_10 = {}".format(utilization_w_leases_8_to_10))
 
     rate_offsets = find_rate_offsets(zone,start_date,end_date,hour_ranges)
@@ -1083,13 +1091,13 @@ def index(request):
     #st_form.fields['zone'].initial = ["401 - Downtown 1"]
 
     hour_ranges = get_hour_ranges(admin_view)
-    results, transactions_chart_data, payments_chart_data, chart_ranges, utilization_w_leases_8_to_10 = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
+    results, transactions_chart_data, payments_chart_data, chart_ranges, utilization_w_leases_8_to_10 = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges,admin_view)
     if not admin_view: # This is all a hack to get the correct utilization_w_leases_8_to_10 value.
         # How the morning collapse, the hour-range manipulations, and the utilization-box value
         # extraction are working should all be better coordinated.
         print("Before, utilization_w_leases_8_to_10 = {}".format(utilization_w_leases_8_to_10))
         hour_ranges = get_hour_ranges(True)
-        _, _, _, _, utilization_w_leases_8_to_10 = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges)
+        _, _, _, _, utilization_w_leases_8_to_10 = obtain_table_vectorized(ref_time,search_by,initial_zone,start_date,end_date,hour_ranges,admin_view)
         print("After, utilization_w_leases_8_to_10 = {}".format(utilization_w_leases_8_to_10))
 
     rate_offsets = find_rate_offsets(initial_zone,start_date,end_date,hour_ranges)
