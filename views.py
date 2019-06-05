@@ -1010,12 +1010,17 @@ def get_results(request):
     return JsonResponse(data)
 
 def public(request):
+    if not request.user.is_authenticated():
+        return redirect('%s?next=%s' % ('/admin/login/', request.path))
+
     #return render(request, 'valet/index.html', {'admin_view': False})
     request.session['admin_view'] = False
     request.session['just_switched_views'] = True
     return redirect('valet:index')
 
 def nonpublic(request):
+    if not request.user.is_authenticated(): # Prevent just anyone from accessing this page.
+        return redirect('%s?next=%s' % ('/admin/login/', request.path))
     request.session['admin_view'] = True
     request.session['just_switched_views'] = True
     return redirect('valet:index')
