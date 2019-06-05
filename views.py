@@ -1012,10 +1012,12 @@ def get_results(request):
 def public(request):
     #return render(request, 'valet/index.html', {'admin_view': False})
     request.session['admin_view'] = False
+    request.session['just_switched_views'] = True
     return redirect('valet:index')
 
 def nonpublic(request):
     request.session['admin_view'] = True
+    request.session['just_switched_views'] = True
     return redirect('valet:index')
 
 def index(request):
