@@ -1019,8 +1019,8 @@ def nonpublic(request):
     return redirect('valet:index')
 
 def index(request):
-    if not request.user.is_authenticated():                              # Comment these two lines out to
-        return redirect('%s?next=%s' % ('/admin/login/', request.path))  # make the report generator public.
+    #if not request.user.is_authenticated():                              # Comment these two lines out to
+    #    return redirect('%s?next=%s' % ('/admin/login/', request.path))  # make the report generator public.
 
     admin_view = request.user.is_staff
     if request.user.is_staff:
