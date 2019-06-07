@@ -307,8 +307,10 @@ def source_time_range(ref_time):
     metadata = get_package_metadata(site,package_id,API_key)
     if 'temporal_coverage' in metadata:
         begin_date, end_date = metadata['temporal_coverage'].split('/')
-        return "from {} to {}".format(begin_date, end_date)
-    return None
+        source_begin_date = parser.parse(begin_date).date()
+        source_end_date = parser.parse(end_date).date()
+        return "from {} to {}".format(begin_date, end_date), source_begin_date, source_end_date
+    return None, None, None
 
 def get_number_of_rows(site,resource_id,API_key=None):
 # On other/later versions of CKAN it would make sense to use
@@ -1110,7 +1112,7 @@ def index(request):
     rate_offsets = find_rate_offsets(initial_zone,start_date,end_date,hour_ranges)
     output_table = format_as_table(results,initial_zone,admin_view,late_night_zones,rate_offsets)
 
-    transactions_time_range = source_time_range(ref_time)
+    transactions_time_range, _, _ = source_time_range(ref_time)
     context = {'zone_picker': st_form.as_p(),
             'form': st_form,
             'start_date': format_date(start_date),
