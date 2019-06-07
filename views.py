@@ -683,6 +683,8 @@ def format_utilization(u_input,admin_view=True):
     return u_formatted
 
 def utilization_formula(revenue,effective_space_count,hourly_rate,non_free_days,slot_duration):
+    if non_free_days == 0:
+        return 0
     return revenue/effective_space_count/hourly_rate/non_free_days/slot_duration
 
 def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_hours,is_a_minizone):
