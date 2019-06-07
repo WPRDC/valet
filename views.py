@@ -707,7 +707,9 @@ def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_ho
     space_count = get_space_count_and_rate(zone,start_date,end_date)[0]
     if space_count is not None:
         effective_space_count = space_count - 0.85*lease_count
-    non_free_days = parking_days_in_range(start_date,end_date)
+
+    _, source_start_date, source_end_date = source_time_range(ref_time)
+    non_free_days = parking_days_in_range(start_date,end_date,source_start_date,source_end_date,True)
 
     utilizations, utilizations_w_leases = [], []
     for start_hour,end_hour,revenue in zip(start_hours,end_hours,revenues):
@@ -809,7 +811,7 @@ def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ran
             # does not match the value obtained by using morning_utilization manipulations
             # returned by vectorized_query with the true hour ranges.
 
-    utilization_w_leases_8_to_10 = format_utilization(utilization_w_leases_8_to_10,admin_view)
+    utilization_w_leases_8_to_10 = format_utilization(utilization_w_leases_8_to_10, start_date, end_date, ref_time, admin_view)
 
     return r_list, transactions_chart_data, payments_chart_data, chart_ranges, utilization_w_leases_8_to_10
 
