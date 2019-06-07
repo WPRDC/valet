@@ -671,12 +671,24 @@ def get_hourly_rate(zone,start_date,end_date,start_hour,end_hour):
     space_count, hourly_rate, rate_description = get_space_count_and_rate(zone,start_date,end_date,start_hour,end_hour)
     return hourly_rate
 
-def format_utilization(u_input,admin_view=True):
+def format_utilization(u_input,start_date,end_date,ref_time,admin_view=True):
     u_threshold = 115
     if u_input is None:
         u_formatted = "-"
     else:
         if not admin_view:
+            _, source_start_date, source_end_date = source_time_range(ref_time)
+            if end_date < source_start_date or start_date > source_end_date: # For the
+                # public view, a projected average utilization should not be given for
+                # time ranges completely outside the source data range.
+                # For these cases, non_free_days, which causes utilization to be
+                # set to zero, but it's still a good idea to change it to a "-".
+                return "-"
+            #if start_date < source_start_date < end_date or start_date < source_end_date < end_date:
+                # Cases where the window of interest straddles the data range:
+                # non_free_days is now calculated correctly to normalize such cases.
+
+
             if u_input > u_threshold/100.0:
                 return "{}%+".format(u_threshold)
         u_formatted = "{:.1f}%".format(100*u_input)
