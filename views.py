@@ -707,8 +707,7 @@ def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_ho
     if space_count is not None:
         effective_space_count = space_count - 0.85*lease_count
 
-    _, source_start_date, source_end_date = source_time_range(ref_time)
-    non_free_days = parking_days_in_range(start_date,end_date,source_start_date,source_end_date,True)
+    non_free_days = parking_days_in_range(start_date,end_date,ref_time,True)
 
     utilizations, utilizations_w_leases = [], []
     for start_hour,end_hour,revenue in zip(start_hours,end_hours,revenues):

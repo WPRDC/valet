@@ -5,6 +5,7 @@ from datetime import datetime, date, timedelta
 
 from calendar import monthrange
 from pprint import pprint
+from .query_util import source_time_range
 
 ## A bunch of date calculation functions (not currently in use in the code) ##
 def nth_m_day(year,month,n,m):
@@ -59,9 +60,10 @@ def parking_days_in_month(year,month):
             count += 1
     return count
 
-def parking_days_in_range(start_date,end_date,source_start,source_end,constrain_to_days_with_data=False):
+def parking_days_in_range(start_date,end_date,ref_time='purchase_time',constrain_to_days_with_data=False):
     """This function accepts date objects and finds the number of non-free parking days
     between them (including the start date but not the end date)."""
+    _, source_start, source_end = source_time_range(ref_time)
     assert start_date <= end_date
     if constrain_to_days_with_data:
         if end_date < source_start or start_date > source_end:
