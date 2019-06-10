@@ -2,6 +2,8 @@ import ckanapi
 from datetime import datetime
 from pprint import pprint
 
+from dateutil import parser
+
 def get_credentials_and_package_id():
     from .credentials import site, ckan_api_key as API_key, transactions_package_id as package_id, resource_name
     #from .credentials import site, ckan_api_key as API_key, debug_package_id as package_id, resource_name
@@ -194,3 +196,18 @@ def get_revenue_and_count_vectorized(ref_time,zone,start_date,end_date,start_hou
             payments.append(0.0)
             transaction_counts.append(0)
     return payments, transaction_counts
+
+def get_package_metadata(site,package_id,API_key=None):
+    ckan = ckanapi.RemoteCKAN(site, apikey=API_key)
+    metadata = ckan.action.package_show(id=package_id)
+    return metadata
+
+def source_time_range(ref_time):
+    site, API_key, package_id = get_credentials_and_package_id()
+    metadata = get_package_metadata(site,package_id,API_key)
+    if 'temporal_coverage' in metadata:
+        begin_date, end_date = metadata['temporal_coverage'].split('/')
+        source_begin_date = parser.parse(begin_date).date()
+        source_end_date = parser.parse(end_date).date()
+        return "from {} to {}".format(begin_date, end_date), source_begin_date, source_end_date
+    return None, None, None
