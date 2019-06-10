@@ -666,12 +666,12 @@ def format_utilization(u_input,start_date,end_date,ref_time,admin_view=True):
             if end_date < source_start_date or start_date > source_end_date: # For the
                 # public view, a projected average utilization should not be given for
                 # time ranges completely outside the source data range.
-                # For these cases, non_free_days, which causes utilization to be
+                # For these cases, metered_days == 0, which causes utilization to be
                 # set to zero, but it's still a good idea to change it to a "-".
                 return "-"
             #if start_date < source_start_date < end_date or start_date < source_end_date < end_date:
                 # Cases where the window of interest straddles the data range:
-                # non_free_days is now calculated correctly to normalize such cases.
+                # metered_days is now calculated correctly to normalize such cases.
 
 
             if u_input > u_threshold/100.0:
@@ -679,10 +679,10 @@ def format_utilization(u_input,start_date,end_date,ref_time,admin_view=True):
         u_formatted = "{:.1f}%".format(100*u_input)
     return u_formatted
 
-def utilization_formula(revenue,effective_space_count,hourly_rate,non_free_days,slot_duration):
-    if non_free_days == 0:
+def utilization_formula(revenue,effective_space_count,hourly_rate,metered_days,slot_duration):
+    if metered_days == 0:
         return 0
-    return revenue/effective_space_count/hourly_rate/non_free_days/slot_duration
+    return revenue/effective_space_count/hourly_rate/metered_days/slot_duration
 
 def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_hours,is_a_minizone):
     """Transient utilization = (Revenue from parking purchases) / { ([# of spots] - 0.85*[# of leases]) * (rate per hour) * (the number of days in the time span where parking is not free) * (duration of slot in hours) }
@@ -707,7 +707,7 @@ def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_ho
     if space_count is not None:
         effective_space_count = space_count - 0.85*lease_count
 
-    non_free_days = parking_days_in_range(start_date,end_date,ref_time,True)
+    metered_days = parking_days_in_range(start_date,end_date,ref_time,True)
 
     utilizations, utilizations_w_leases = [], []
     for start_hour,end_hour,revenue in zip(start_hours,end_hours,revenues):
@@ -716,11 +716,11 @@ def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_ho
         assert end_hour > start_hour
 
         #print("hourly_rate = {}, space_count = {}".format(hourly_rate,space_count))
-        if hourly_rate is None or space_count is None or non_free_days == 0:
+        if hourly_rate is None or space_count is None or metered_days == 0:
             utilizations.append(None)
             utilizations_w_leases.append(None)
         else:
-            ut = utilization_formula(revenue,effective_space_count,hourly_rate,non_free_days,slot_duration)
+            ut = utilization_formula(revenue,effective_space_count,hourly_rate,metered_days,slot_duration)
             utilizations.append(ut)
             #if start_hour < 8 or start_hour >= 18: # This excludes the "total" slot (from hour 0 to hour 24).
             #if start_hour >= 18: # This excludes the "total" slot (from hour 0 to hour 24).
@@ -746,7 +746,7 @@ def calculate_utilization_vectorized(zone,start_date,end_date,start_hours,end_ho
         elif start_hour == 8:
             u = total_ut
             if u is not None:
-                morning_utilization = utilization_formula(morning_revenue,effective_space_count,hourly_rate,non_free_days,slot_duration)
+                morning_utilization = utilization_formula(morning_revenue,effective_space_count,hourly_rate,metered_days,slot_duration)
                 u = morning_utilization + total_ut
         else:
             u = total_ut
