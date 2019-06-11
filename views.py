@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.template import loader
 from django import forms
+from django.contrib.auth import logout
 
 from datetime import datetime, timedelta, date
 from dateutil import parser
@@ -1036,6 +1037,10 @@ def nonpublic(request):
         return redirect('%s?next=%s' % ('/admin/login/', request.path))
     request.session['admin_view'] = True
     request.session['just_switched_views'] = True
+    return redirect('valet:index')
+
+def logout_view(request):
+    logout(request)
     return redirect('valet:index')
 
 def index(request):

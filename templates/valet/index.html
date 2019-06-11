@@ -461,12 +461,15 @@ var myChart = new Chart(ctx, {
 
 {% block content %}
 {% if user.is_authenticated %}
+    <div>
     {% if admin_view %}
-        <p><a href="public/">Switch to public view</a></p>
+        <div style="float:left"><a href="public/">Switch to public view</a></div>
     {% else %}
-        <p><a href="nonpublic/">Switch to internal view</a></p>
+        <div style="float:left"><a href="nonpublic/">Switch to internal view</a></div>
     {% endif %}
-
+        <div style="float:right"><a href="logout/">Log out</a></div>
+    </div>
+    <div style="clear:both"></div>
 {% endif %}
 <div class="container">
     <div class="row">
