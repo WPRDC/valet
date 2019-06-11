@@ -62,14 +62,15 @@ def parking_days_in_month(year,month):
 
 def parking_days_in_range(start_date,end_date,ref_time='purchase_time',constrain_to_days_with_data=False):
     """This function accepts date objects and finds the number of non-free parking days
-    between them (including the start date but not the end date)."""
+    (i.e., metered parking days) between them (including the start date but not the end date)."""
     _, source_start, source_end = source_time_range(ref_time)
     assert start_date <= end_date
     if constrain_to_days_with_data:
         if end_date < source_start or start_date > source_end:
             return 0 # Window has no overlap with source data.
         start_date = max(start_date, source_start)
-        end_date = min(end_date, source_end)
+        end_date = min(end_date, source_end + timedelta(days=1)) # The end_date is non-inclusive (one day beyond the last date
+        # in the range). The source_end is inclusive, so to convert source_end to end_date, we must add one day.
         # |----| |----data-----|  ==> 0
         #    |~~~~~~~|
         #        |~~~| (the intersection of the ranges)
