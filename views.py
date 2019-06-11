@@ -888,6 +888,17 @@ def get_dts_from_date_range(request):
 
     return start_dt, end_dt
 
+def get_display_time_range(search_by, start_date, end_date, year=None, month=None, quarter=None):
+    metered_days = parking_days_in_range(start_date,end_date,ref_time='purchase_time',constrain_to_days_with_data=True)
+    if search_by == 'month':
+        return "{}/{} ({} metered days)".format(month, year, metered_days)
+    if search_by == 'quarter':
+        return "{} (() metered days)".format(quarter, metered_days)
+    if search_by == 'date':
+        return "{} through {} ({} metered days)".format(start_date, end_date - timedelta(days=1), metered_days)
+        # Here, the DISPLAY end date is one day less than end_date. end_date is the day beyond the end of the range.
+        # end_date - one day == the end of the range.
+
 def get_dates(request):
     """
     Look up the start_date and end_date for this date range/quarter/month
@@ -903,7 +914,7 @@ def get_dates(request):
         data = {
             'start_dt': start_dt,
             'end_dt': end_dt,
-            'display_time_range': "{} through {}".format(start_dt.date(), end_dt.date() - timedelta(days=1))
+            'display_time_range': get_display_time_range(search_by, start_dt.date(), end_dt.date())
         }
     elif search_by == 'quarter':
         quarter = request.GET.get('quarter', None)
@@ -913,7 +924,7 @@ def get_dates(request):
             'start_dt': start_dt,
             'end_dt': end_dt,
             'quarter': quarter,
-            'display_time_range': quarter
+            'display_time_range': get_display_time_range(search_by, start_date, end_date, None, None, quarter)
         }
     elif search_by == 'month':
         month = request.GET.get('month', None)
@@ -930,7 +941,7 @@ def get_dates(request):
             'end_dt': end_dt,
             'month': month,
             'year': year,
-            'display_time_range': "{}/{}".format(month,year)
+            'display_time_range': get_display_time_range(search_by, start_date, end_date, year, month)
         }
 
     return JsonResponse(data)
@@ -1133,12 +1144,11 @@ def index(request):
             }
 
     if search_by == 'date':
-        context['display_time_range'] = "{} through {}".format(start_date, end_date - timedelta(days=1))
+        context['display_time_range'] = get_display_time_range(search_by, start_date, end_date)
     elif search_by == 'quarter':
-        context['display_time_range'] = initial_quarter
+        context['display_time_range'] = get_display_time_range(search_by, start_date, end_date, None, None, initial_quarter)
     elif search_by == 'month':
-        context['display_time_range'] = "{}/{}".format(initial_month,initial_year)
-
+        context['display_time_range'] = get_display_time_range(search_by, start_date, end_date, initial_year, initial_month)
     return render(request, 'valet/index.html', context)
 
     #return HttpResponse(template.render(context, request))
