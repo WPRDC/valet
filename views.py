@@ -22,6 +22,21 @@ ref_time = 'purchase_time'
 late_night_zones = ["328 - Ivy Bellefonte Lot", "Southside Lots", "341 - 18th & Sidney Lot", "342 - East Carson Lot", "343 - 19th & Carson Lot", "344 - 18th & Carson Lot", "345 - 20th & Sidney Lot"]
 # [ ] Add final hour range/ranges for the Southside (maybe picking only particular days, so a different query might be needed).
 
+def namespace_of(request):
+    """Function to extract the namespace from the request (assuming one has
+    been assigned by one of the urls.py files) and use that in synthesizing
+    inputs to the redirect functions."""
+    # urls.py for the Django installation should include routing like these to make use of the
+    # namespacing as implemented in valet/views.py:
+    #   url(r'^valet/', include('valet.urls', namespace='valet')),
+    #   url(r'^private-valet/', include('valet.urls', namespace='private-valet'), {'private_view': True}), # Whichever one has the namespace='valet' sort of becomes the primary one
+    # because the valet.public, valet.nonpublic, and valet.logout_view views all explicitly redirect to 'valet:index'
+    full_whatever = request.resolver_match.view_name # This can look like 'valet:index' if a namespace has been assigned or else like 'index'.
+    if ':' in full_whatever:
+        parts = full_whatever.split(':')
+        return parts[0]
+    return ''
+
 def collapse_morning(hour_ranges):
     if 'midnight-8am' in hour_ranges and '8am-10am' in hour_ranges:
         del hour_ranges['midnight-8am']
@@ -814,7 +829,7 @@ def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ran
 
     return r_list, transactions_chart_data, payments_chart_data, chart_ranges, utilization_w_leases_8_to_10
 
-def get_features(request):
+def get_features(request,private_view=None):
     """
     Look up the space count, lease count, and rate for this combination
     of zone and quarter (eventually extend this to date range) and return them.
@@ -858,7 +873,7 @@ def get_features(request):
 
     return JsonResponse(data)
 
-def get_dts_from_date_range(request):
+def get_dts_from_date_range(request,private_view=None):
     """Take a request, extract the from_date and to_date parameters and convert them to
     start_dt and end_dt datetimes, handling cases where both values are unchosen by
     picking the most recent full day (yesterday) and handling cases where only one
@@ -900,7 +915,7 @@ def get_display_time_range(search_by, start_date, end_date, year=None, month=Non
         # Here, the DISPLAY end date is one day less than end_date. end_date is the day beyond the end of the range.
         # end_date - one day == the end of the range.
 
-def get_dates(request):
+def get_dates(request,private_view=None):
     """
     Look up the start_date and end_date for this date range/quarter/month
     and return them.
@@ -960,7 +975,7 @@ def find_rate_offsets(zone,start_date,end_date,hour_ranges):
     print("find_rate_offsets: {}".format(rates))
     return [((r - rates[0]) if r is not None else 0) for r in rates]
 
-def get_results(request):
+def get_results(request,private_view=None):
     """
     Look up the utilization, total payments, and transaction count for this combination
     of zone and quarter/month (eventually extend this to arbitrary date range) and return them.
@@ -1023,29 +1038,33 @@ def get_results(request):
     }
     return JsonResponse(data)
 
-def public(request):
+def public(request,private_view=None):
     if not request.user.is_authenticated():
         return redirect('%s?next=%s' % ('/admin/login/', request.path))
 
     #return render(request, 'valet/index.html', {'admin_view': False})
     request.session['admin_view'] = False
     request.session['just_switched_views'] = True
-    return redirect('valet:index')
+    namespace = namespace_of(request)
+    return redirect(namespace + ':index')
 
-def nonpublic(request):
+def nonpublic(request,private_view=None):
     if not request.user.is_authenticated(): # Prevent just anyone from accessing this page.
         return redirect('%s?next=%s' % ('/admin/login/', request.path))
     request.session['admin_view'] = True
     request.session['just_switched_views'] = True
-    return redirect('valet:index')
+    namespace = namespace_of(request)
+    return redirect(namespace + ':index')
 
-def logout_view(request):
+def logout_view(request,private_view=None):
     logout(request)
-    return redirect('valet:index')
+    namespace = namespace_of(request)
+    return redirect(namespace + ':index')
 
-def index(request):
-    #if not request.user.is_authenticated():                              # Comment these two lines out to
-    #    return redirect('%s?next=%s' % ('/admin/login/', request.path))  # make the report generator public.
+def index(request,private_view=None):
+    if private_view is not None and private_view:
+        if not request.user.is_authenticated():                              # Use these two lines without the preceding if
+            return redirect('%s?next=%s' % ('/admin/login/', request.path))  # to make the report generator private.
 
     admin_view = request.user.is_staff
     if request.user.is_staff:
