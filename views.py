@@ -15,7 +15,7 @@ from collections import defaultdict, OrderedDict
 from .models import SpaceCount, LeaseCount, LastCached
 from .util import parking_days_in_range, format_as_table, format_row, format_date, format_rate_description
 from .query_util import get_revenue_and_count_vectorized, get_credentials_and_package_id, source_time_range
-from .proto_get_revenue import set_table, clear_table
+from .proto_get_revenue import set_table, clear_table, check_table
 
 ref_time = 'purchase_time'
 
@@ -800,9 +800,12 @@ def obtain_table_vectorized(ref_time,search_by,zone,start_date,end_date,hour_ran
     start_hours, end_hours = find_boundaries(hour_ranges)
 
     is_a_minizone = is_minizone(zone)
-    set_table(ref_time,is_a_minizone)
+    needs_setting = check_table(ref_time,is_a_minizone)
+    if needs_setting:
+        set_table(ref_time,is_a_minizone)
     rows = vectorized_query(zone,search_by,start_date,end_date,start_hours,end_hours,is_a_minizone)
-    clear_table(ref_time,is_a_minizone)
+    if needs_setting:
+        clear_table(ref_time,is_a_minizone)
 
     utilization_w_leases_8_to_10 = None
     for key,r_dict in zip(hour_ranges,rows):
