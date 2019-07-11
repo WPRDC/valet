@@ -17,6 +17,8 @@ from .util import parking_days_in_range, format_as_table, format_row, format_dat
 from .query_util import get_revenue_and_count_vectorized, get_credentials_and_package_id, source_time_range
 from .proto_get_revenue import set_table, clear_table, check_table
 
+from .credentials import ga_tracking_id
+
 ref_time = 'purchase_time'
 
 late_night_zones = ["328 - Ivy Bellefonte Lot", "Southside Lots", "341 - 18th & Sidney Lot", "342 - East Carson Lot", "343 - 19th & Carson Lot", "344 - 18th & Carson Lot", "345 - 20th & Sidney Lot"]
@@ -1167,7 +1169,8 @@ def index(request,private_view=None):
             'search_by': search_by,
             'transactions_time_range': transactions_time_range,
             'admin_view': admin_view,
-            'utilization_w_leases_8_to_10': utilization_w_leases_8_to_10
+            'utilization_w_leases_8_to_10': utilization_w_leases_8_to_10,
+            'ga_tracking_id': ga_tracking_id,
             }
 
     if search_by == 'date':
