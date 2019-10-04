@@ -10,6 +10,6 @@ urlpatterns = [
     url(r'^nonpublic/$', views.nonpublic, name='nonpublic'),
     url(r'^login/$', views.nonpublic, name='force_login'),
     url(r'^logout/$', views.logout_view, name='logout'),
-    url(r'^logff/$', views.logout_view, name='logout'),
+    url(r'^logoff/$', views.logout_view, name='logout'),
     url(r'^$', views.index, name='index'),
 ]
